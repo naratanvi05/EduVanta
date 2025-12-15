@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+
+{% block title %}Verify Email - EduVanta{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+  <div class="sm:mx-auto sm:w-full sm:max-w-md">
+    <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">Verify your email</h2>
+    <p class="mt-2 text-center text-sm text-gray-600">
+      We've sent a 6-digit code to <span class="font-semibold">{{ email }}</span>.
+    </p>
+    {% if otp_preview %}
+    <div class="mt-4 text-center text-xs text-gray-500">
+      Dev hint: Your OTP is <span class="font-mono font-semibold">{{ otp_preview }}</span>
+    </div>
+    {% endif %}
+    <div class="mt-4 text-center">
+      <button id="edit-email-toggle" type="button" class="text-xs text-indigo-600 hover:text-indigo-800">Edit Email</button>
+    </div>
+  </div>
+
+  <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+    <div class="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+
+      {% if messages %}
+      <div class="space-y-2 mb-4">
+        {% for message in messages %}
+          <div class="rounded-md {% if message.tags == 'error' %}bg-red-50 text-red-800{% else %}bg-green-50 text-green-800{% endif %} p-3 text-sm">{{ message }}</div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <form method="POST" action="{% url 'accounts:verify_otp' %}" class="space-y-6">
+        {% csrf_token %}
+        <div>
+          <label for="otp" class="block text-sm font-medium text-gray-700">Enter 6-digit OTP</label>
+          <div class="mt-1">
+            <input type="text" name="otp" id="otp" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" required
+                   class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+          </div>
+          <p class="mt-2 text-xs text-gray-500">The code expires in 10 minutes.</p>
+        </div>
+
+        <div>
+          <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Verify</button>
+        </div>
+      </form>
+
+      <!-- Edit Email Form (hidden by default) -->
+      <form id="edit-email-form" method="POST" action="{% url 'accounts:update_verification_email' %}" class="space-y-3 mt-4 hidden">
+        {% csrf_token %}
+        <label for="new_email" class="block text-sm font-medium text-gray-700">Update email</label>
+        <input type="email" id="new_email" name="email" value="{{ email }}" required class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
+        <button class="w-full py-2 px-4 rounded-md text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none">Save & Resend OTP</button>
+      </form>
+
+      <div class="mt-6 text-center text-sm text-gray-600">
+        Didn't receive the code?
+        <a id="resend-link" class="font-medium text-indigo-600 hover:text-indigo-500" href="{% url 'accounts:resend_otp' %}">Resend OTP</a>
+        <span id="resend-timer" class="ml-2 text-xs text-gray-400 hidden"></span>
+        ·
+        <a class="font-medium text-gray-600 hover:text-gray-800" href="/accounts/register/">Start over</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Enhance OTP UX: autofocus, edit email toggle, resend timer
+  document.addEventListener('DOMContentLoaded', function(){
+    const otp = document.getElementById('otp');
+    if (otp) otp.focus();
+    const toggle = document.getElementById('edit-email-toggle');
+    const form = document.getElementById('edit-email-form');
+    if (toggle && form) {
+      toggle.addEventListener('click', function(){ form.classList.toggle('hidden'); });
+    }
+    // Resend timer: disable for 30s after click
+    const resend = document.getElementById('resend-link');
+    const timer = document.getElementById('resend-timer');
+    function startTimer(sec){
+      let s = sec;
+      if (timer) timer.classList.remove('hidden');
+      const iv = setInterval(function(){
+        if (timer) timer.textContent = `(Wait ${s}s)`;
+        s -= 1;
+        if (s < 0) { clearInterval(iv); if (timer){ timer.textContent = ''; timer.classList.add('hidden'); } if (resend){ resend.classList.remove('pointer-events-none','text-gray-400'); } }
+      }, 1000);
+    }
+    if (resend){
+      resend.addEventListener('click', function(){
+        resend.classList.add('pointer-events-none','text-gray-400');
+        startTimer(30);
+      });
+    }
+  });
+</script>
+{% endblock %}

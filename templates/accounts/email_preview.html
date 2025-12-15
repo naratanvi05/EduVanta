@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% block title %}Email Preview - EduVanta{% endblock %}
+{% block content %}
+<div class="max-w-3xl mx-auto py-10 px-4">
+  <div class="flex items-center justify-between mb-6">
+    <h1 class="text-2xl font-bold">Email Preview</h1>
+    <a href="{% url 'accounts:dashboard' %}" class="btn-outline text-sm">Back to Dashboard</a>
+  </div>
+
+  <div class="p-6 bg-white rounded-lg shadow">
+    <form method="post" class="space-y-4">
+      {% csrf_token %}
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Template Type</label>
+        <select name="template" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">
+          <option value="enrollment">Enrollment (Parent)</option>
+          <option value="coteacher">Co‑Teacher Assigned (Parent)</option>
+          <option value="completion">Completion (Parent)</option>
+          <option value="grade">Grade Updated (Parent)</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Course</label>
+        <select name="course" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">
+          <option value="">Auto-pick first</option>
+          {% for c in courses %}
+            <option value="{{ c.id }}">{{ c.title }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Grade (for Grade template)</label>
+        <input type="text" name="grade" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="e.g., A, 92, Pass" />
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Send To</label>
+        <input type="email" name="to_email" value="{{ request.user.email }}" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" />
+      </div>
+
+      <div class="pt-2">
+        <button type="submit" class="btn-primary">Send Preview</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

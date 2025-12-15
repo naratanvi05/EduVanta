@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block title %}Child Overview - EduVanta{% endblock %}
+{% block content %}
+<div class="max-w-6xl mx-auto py-10 px-4">
+  <div class="flex items-center justify-between mb-6">
+    <div>
+      <h1 class="text-2xl font-bold">{{ child.get_full_name|default:child.username }}</h1>
+      <p class="text-sm text-gray-500">Child overview • Total XP: <span class="font-semibold text-gray-800">{{ total_xp }}</span></p>
+    </div>
+    <div class="space-x-2">
+      <a href="{% url 'accounts:parent_review_children' %}" class="btn-outline text-sm">Back to Review</a>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 gap-6">
+    <div class="bg-white rounded-lg shadow p-6">
+      <h2 class="text-lg font-semibold mb-3">Enrollments</h2>
+      {% if enrollments %}
+      <div class="divide-y">
+        {% for e in enrollments %}
+        <div class="py-4 flex items-start justify-between">
+          <div>
+            <div class="font-medium">{{ e.course.title }}</div>
+            <div class="text-xs text-gray-500 mt-0.5">
+              {{ e.course.department.code }} / {{ e.course.specialization.name }}{% if e.course.subspecialization %} / {{ e.course.subspecialization.name }}{% endif %}
+            </div>
+            <div class="text-xs text-gray-600 mt-1">Instructor: {{ e.course.instructor.username|default:"TBA" }}</div>
+          </div>
+          <div class="w-48 text-right">
+            <div class="progress-bar"><div class="progress-bar-fill" style="width: {{ e.progress_percent|default:0 }}%"></div></div>
+            <div class="text-xs text-gray-500 mt-1">Progress: {{ e.progress_percent|default:0 }}%{% if e.grade %} • Grade: {{ e.grade }}{% endif %}</div>
+            <div class="text-xs text-gray-600 mt-1">XP from course: <span class="font-semibold">{{ e.earned_xp }}</span></div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p class="text-sm text-gray-600">No enrollments found for this child.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

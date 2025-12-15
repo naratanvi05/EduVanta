@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+{% block title %}Create Course - EduVanta{% endblock %}
+{% block extra_js %}
+<script>
+  function slugify(text) {
+    return text.toString().toLowerCase()
+      .replace(/\s+/g, '-')
+      .replace(/[^\w\-]+/g, '')
+      .replace(/\-\-+/g, '-')
+      .replace(/^-+/, '')
+      .replace(/-+$/, '');
+  }
+  document.addEventListener('DOMContentLoaded', function() {
+    const title = document.getElementById('title');
+    const slug = document.getElementById('slug');
+    const dept = document.getElementById('department');
+    const spec = document.getElementById('specialization');
+    const subspec = document.getElementById('subspecialization');
+    document.getElementById('gen-slug').addEventListener('click', function(e){
+      e.preventDefault();
+      slug.value = slugify(title.value);
+    });
+    function filterSubspecs() {
+      const selectedSpec = spec.value;
+      Array.from(subspec.options).forEach(opt => {
+        const s = opt.getAttribute('data-spec');
+        opt.hidden = !!selectedSpec && s && s !== selectedSpec ? true : false;
+      });
+    }
+    function filterSpecs() {
+      const selectedDept = dept.value;
+      // Reset spec selection if hidden
+      let firstVisible = null;
+      Array.from(spec.options).forEach(opt => {
+        const d = opt.getAttribute('data-dept');
+        const shouldHide = !!selectedDept && d && d !== selectedDept;
+        opt.hidden = shouldHide;
+        if (!shouldHide && !firstVisible && opt.value) firstVisible = opt.value;
+      });
+      // If current selection is hidden, clear it
+      if (spec.selectedOptions.length && spec.selectedOptions[0].hidden) {
+        spec.value = '';
+      }
+      // Update subspecs after spec changes
+      filterSubspecs();
+    }
+    spec.addEventListener('change', filterSubspecs);
+    dept.addEventListener('change', filterSpecs);
+    filterSubspecs();
+    filterSpecs();
+  });
+</script>
+{% endblock %}
+{% block content %}
+<div class="max-w-3xl mx-auto py-10 px-4">
+  <div class="flex items-center justify-between mb-6">
+    <h1 class="text-2xl font-bold">Create Course</h1>
+    <a href="{% url 'courses:instructor_my_courses' %}" class="btn-outline text-sm">Back to My Courses</a>
+  </div>
+
+  <form method="post" class="space-y-6">
+    {% csrf_token %}
+
+    <div>
+      <label class="block text-sm font-medium text-gray-700" for="title">Title</label>
+      <input id="title" name="title" type="text" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" />
+    </div>
+
+    <div>
+      <div class="flex items-end gap-2">
+        <div class="flex-1">
+          <label class="block text-sm font-medium text-gray-700" for="slug">Slug</label>
+          <input id="slug" name="slug" type="text" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" />
+        </div>
+        <button id="gen-slug" class="btn-outline h-10">Auto</button>
+      </div>
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium text-gray-700" for="department">Department</label>
+      <select id="department" name="department" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">
+        <option value="">-- Select --</option>
+        {% for d in departments %}
+          <option value="{{ d.id }}">{{ d.code }} / {{ d.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium text-gray-700" for="specialization">Specialization</label>
+      <select id="specialization" name="specialization" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">
+        <option value="">-- Select --</option>
+        {% for s in specializations %}
+          <option value="{{ s.id }}" data-dept="{{ s.department.id }}">{{ s.department.code }} / {{ s.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium text-gray-700" for="subspecialization">Sub-specialization (optional)</label>
+      <select id="subspecialization" name="subspecialization" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">
+        <option value="">-- None --</option>
+        {% for ss in subspecializations %}
+          <option value="{{ ss.id }}" data-spec="{{ ss.specialization.id }}">{{ ss.specialization.name }} / {{ ss.name }}</option>
+        {% endfor %}
+      </select>
+      <p class="text-xs text-gray-500 mt-1">List is filtered by selected specialization.</p>
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium text-gray-700" for="description">Description</label>
+      <textarea id="description" name="description" rows="4" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"></textarea>
+    </div>
+
+    <div class="flex items-center gap-2">
+      <input id="published" name="published" type="checkbox" class="h-4 w-4 border-gray-300 rounded" />
+      <label for="published" class="text-sm text-gray-700">Published</label>
+    </div>
+
+    <div class="flex items-center gap-3">
+      <button type="submit" class="btn-primary">Create</button>
+      <a href="{% url 'courses:instructor_my_courses' %}" class="btn-outline">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

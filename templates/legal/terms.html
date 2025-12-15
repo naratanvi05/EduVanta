@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+
+{% block title %}Terms and Conditions - EduVanta{% endblock %}
+
+{% block content %}
+<div class="bg-gray-50 min-h-screen py-12">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="bg-white shadow sm:rounded-lg">
+            <div class="px-4 py-5 sm:p-6">
+                <h1 class="text-3xl font-bold text-gray-900 mb-8">Terms and Conditions</h1>
+                
+                <div class="prose max-w-none">
+                    <h2 class="text-xl font-semibold text-gray-900 mt-6 mb-4">1. Introduction</h2>
+                    <p class="text-gray-600 mb-4">
+                        Welcome to EduVanta. By accessing and using this website, you accept and agree to be bound by the terms and provision of this agreement.
+                    </p>
+
+                    <h2 class="text-xl font-semibold text-gray-900 mt-6 mb-4">2. User Accounts</h2>
+                    <p class="text-gray-600 mb-4">
+                        When you create an account with us, you must provide accurate and complete information. You are responsible for maintaining the security of your account and password.
+                    </p>
+
+                    <h2 class="text-xl font-semibold text-gray-900 mt-6 mb-4">3. Course Content</h2>
+                    <p class="text-gray-600 mb-4">
+                        All content provided on EduVanta is for educational purposes only. You may not copy, reproduce, distribute, or create derivative works from this content without express written permission.
+                    </p>
+
+                    <h2 class="text-xl font-semibold text-gray-900 mt-6 mb-4">4. User Conduct</h2>
+                    <p class="text-gray-600 mb-4">
+                        You agree not to engage in any of the following prohibited activities:
+                    </p>
+                    <ul class="list-disc pl-6 text-gray-600 mb-4">
+                        <li>Copying or distributing course content</li>
+                        <li>Harassing other users</li>
+                        <li>Interfering with the proper functioning of the platform</li>
+                        <li>Attempting to gain unauthorized access</li>
+                    </ul>
+
+                    <h2 class="text-xl font-semibold text-gray-900 mt-6 mb-4">5. Payment and Refunds</h2>
+                    <p class="text-gray-600 mb-4">
+                        Course fees are non-refundable unless otherwise specified. Refund requests will be handled on a case-by-case basis according to our refund policy.
+                    </p>
+
+                    <h2 class="text-xl font-semibold text-gray-900 mt-6 mb-4">6. Intellectual Property</h2>
+                    <p class="text-gray-600 mb-4">
+                        The EduVanta platform and its original content are protected by copyright, trademark, and other laws. Our trademarks and trade dress may not be used without our prior written permission.
+                    </p>
+
+                    <h2 class="text-xl font-semibold text-gray-900 mt-6 mb-4">7. Limitation of Liability</h2>
+                    <p class="text-gray-600 mb-4">
+                        EduVanta shall not be liable for any indirect, incidental, special, consequential, or punitive damages resulting from your use or inability to use the service.
+                    </p>
+
+                    <h2 class="text-xl font-semibold text-gray-900 mt-6 mb-4">8. Changes to Terms</h2>
+                    <p class="text-gray-600 mb-4">
+                        We reserve the right to modify these terms at any time. We will notify users of any material changes via email or through the platform.
+                    </p>
+
+                    <h2 class="text-xl font-semibold text-gray-900 mt-6 mb-4">9. Contact Information</h2>
+                    <p class="text-gray-600 mb-4">
+                        If you have any questions about these Terms, please contact us at support@eduvanta.com
+                    </p>
+                </div>
+
+                <div class="mt-8 border-t border-gray-200 pt-6">
+                    <p class="text-sm text-gray-500">
+                        Last updated: {% now "F j, Y" %}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

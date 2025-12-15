@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>{{ brand_name }} Parent Link Request</title>
+</head>
+<body style="font-family: Arial, sans-serif; background:#f5f7fb; padding:24px;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="max-width:640px; margin:0 auto; background:#ffffff; border-radius:12px; overflow:hidden; box-shadow:0 6px 18px rgba(0,0,0,.07);">
+    <tr>
+      <td style="padding:20px 24px; background: {{ brand_color|default:'#4f46e5' }}; color:#fff;">
+        <div style="display:flex; align-items:center; gap:12px;">
+          {% if logo_url %}
+            <img src="{{ logo_url }}" alt="{{ brand_name }}" style="height:28px; border-radius:6px;" />
+          {% endif %}
+          <h1 style="margin:0; font-size:18px;">{{ brand_name }}</h1>
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:24px; color:#111827;">
+        <h2 style="margin:0 0 12px; font-size:20px;">Parent link request</h2>
+        <p style="margin:0 0 12px; color:#374151;">
+          {{ parent.get_full_name|default:parent.username }} has requested to link to your account as a parent. Approving this will allow them to view limited academic summaries.
+        </p>
+        <div style="margin:20px 0;">
+          <a href="{{ approve_url }}" style="display:inline-block; background:#10b981; color:#fff; padding:10px 16px; border-radius:8px; text-decoration:none;">Approve</a>
+          <a href="{{ decline_url }}" style="display:inline-block; background:#ef4444; color:#fff; padding:10px 16px; border-radius:8px; text-decoration:none; margin-left:8px;">Decline</a>
+        </div>
+        <p style="margin:16px 0 0; font-size:12px; color:#6b7280;">If you did not expect this, you can ignore this email.</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:16px 24px; color:#6b7280; font-size:12px; background:#f9fafb;">© {{ brand_name }}
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

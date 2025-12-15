@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+{% block title %}Manage Children - EduVanta{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto px-4 py-8">
+    <h1 class="text-2xl font-bold mb-4">Manage Linked Children</h1>
+
+    {% if messages %}
+    <div class="space-y-2 mb-4">
+        {% for message in messages %}
+            <div class="p-3 rounded border {% if message.tags == 'success' %}bg-green-50 border-green-200 text-green-800{% elif message.tags == 'error' %}bg-red-50 border-red-200 text-red-800{% elif message.tags == 'warning' %}bg-yellow-50 border-yellow-200 text-yellow-800{% else %}bg-blue-50 border-blue-200 text-blue-800{% endif %}">{{ message }}</div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Invite Child -->
+        <div class="card p-4">
+            <h2 class="text-lg font-semibold mb-2">Invite a Child</h2>
+
+            {% if not invite_verified %}
+            <div class="mb-3 p-3 rounded bg-indigo-50 text-indigo-800 text-sm">
+                For security, please verify your email before sending invites. A 6‑digit code will be emailed to {{ parent_user.email }}.
+            </div>
+            <form action="{% url 'accounts:parent_invite_child' %}" method="POST" class="space-y-3">
+                {% csrf_token %}
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Child Email</label>
+                    <input name="child_email" type="email" required value="{{ pending_child_email }}"
+                           class="mt-1 block w-full border rounded px-3 py-2" placeholder="child@example.com" />
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Child Name (optional)</label>
+                    <input name="child_name" type="text" value="{{ pending_child_name }}"
+                           class="mt-1 block w-full border rounded px-3 py-2" placeholder="Full name" />
+                </div>
+                <div class="flex items-center gap-2">
+                    <button type="submit" class="btn-primary">Send Verification Code</button>
+                </div>
+            </form>
+
+            <form action="{% url 'accounts:parent_invite_child' %}" method="POST" class="space-y-3 mt-4">
+                {% csrf_token %}
+                <input type="hidden" name="child_email" value="{{ pending_child_email }}" />
+                <input type="hidden" name="child_name" value="{{ pending_child_name }}" />
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Enter Verification Code</label>
+                    <input name="verify_code" type="text" inputmode="numeric" pattern="\d{6}" maxlength="6"
+                           class="mt-1 block w-full border rounded px-3 py-2" placeholder="6-digit code" />
+                </div>
+                <button type="submit" class="btn-secondary">Verify & Enable Invites</button>
+            </form>
+            {% else %}
+            <div class="mb-3 p-3 rounded bg-green-50 text-green-800 text-sm">
+                Ownership verified. You can send invites for the next few minutes.
+            </div>
+            <form action="{% url 'accounts:parent_invite_child' %}" method="POST" class="space-y-3">
+                {% csrf_token %}
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Child Email</label>
+                    <input name="child_email" type="email" required class="mt-1 block w-full border rounded px-3 py-2" placeholder="child@example.com" />
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Child Name (optional)</label>
+                    <input name="child_name" type="text" class="mt-1 block w-full border rounded px-3 py-2" placeholder="Full name" />
+                </div>
+                <button type="submit" class="btn-primary">Send Invite</button>
+            </form>
+            {% endif %}
+        </div>
+
+        <!-- Pending Invites -->
+        <div class="card p-4">
+            <h2 class="text-lg font-semibold mb-2">Pending Invites</h2>
+            {% if invites %}
+            <ul class="divide-y">
+                {% for inv in invites %}
+                <li class="py-3 flex items-center justify-between">
+                    <div>
+                        <div class="font-medium text-gray-900">{{ inv.child_email }}</div>
+                        {% if inv.child_name %}<div class="text-sm text-gray-500">{{ inv.child_name }}</div>{% endif %}
+                        <div class="text-xs text-gray-400">
+                            Sent {{ inv.created_at|date:"M j, Y, g:i a" }}
+                            {% with last=inv.deliveries.all|first %}
+                              {% if last %}• Last emailed {{ last.sent_at|date:"M j, Y, g:i a" }}{% endif %}
+                            {% endwith %}
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <a href="{% url 'accounts:parent_resend_invite' inv.id %}" class="text-indigo-600 hover:underline">Resend</a>
+                        <a href="{% url 'accounts:parent_delete_invite' inv.id %}" class="text-red-600 hover:underline">Delete</a>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="text-sm text-gray-500">No pending invites.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Linked Children -->
+    <div class="card p-4 mt-6">
+        <h2 class="text-lg font-semibold mb-2">Linked Children</h2>
+        {% if linked %}
+        <ul class="divide-y">
+            {% for link in linked %}
+            <li class="py-3 flex items-center justify-between">
+                <div>
+                    <div class="font-medium text-gray-900">{{ link.child.get_full_name|default:link.child.username }}</div>
+                    <div class="text-sm text-gray-500">{{ link.child.email }}</div>
+                    <div class="text-xs text-gray-400">Linked {{ link.created_at|date:"M j, Y, g:i a" }}</div>
+                </div>
+                <a href="{% url 'accounts:parent_remove_link' link.child.id %}" class="text-red-600 hover:underline">Remove</a>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-sm text-gray-500">No linked children yet.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

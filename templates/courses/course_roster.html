@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% block title %}Course Roster - {{ course.title }}{% endblock %}
+{% block content %}
+<div class="max-w-6xl mx-auto py-10 px-4">
+  <div class="flex items-center justify-between mb-6">
+    <h1 class="text-2xl font-bold">{{ course.title }} — Roster</h1>
+    <a class="btn-outline text-sm" href="{% url 'courses:instructor_my_courses' %}">Back to My Courses</a>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div class="card p-5">
+      <h2 class="text-lg font-semibold mb-3">Enrolled Students</h2>
+      <form method="post" action="{% url 'courses:add_student' course.id %}" class="mb-4">
+        {% csrf_token %}
+        <div class="flex gap-2">
+          <input type="text" name="query" placeholder="Student email or ID" class="flex-1 px-3 py-2 border border-gray-300 rounded-md" required>
+          <button type="submit" class="btn-primary text-sm">Add</button>
+        </div>
+      </form>
+      {% if enrollments %}
+        <ul class="divide-y">
+          {% for enr in enrollments %}
+            <li class="py-2 flex items-center justify-between">
+              <div>
+                <div class="font-medium">{{ enr.student.username }}</div>
+                <div class="text-xs text-gray-500">{{ enr.student.email }}</div>
+              </div>
+              <a class="text-red-600 hover:text-red-800 text-sm" href="{% url 'courses:remove_student' course.id enr.student.id %}">Remove</a>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="text-gray-600 text-sm">No students enrolled yet.</p>
+      {% endif %}
+    </div>
+
+    <div class="card p-5">
+      <h2 class="text-lg font-semibold mb-3">Co‑Teachers</h2>
+      <form method="post" action="{% url 'courses:add_co_teacher' course.id %}" class="mb-4">
+        {% csrf_token %}
+        <div class="flex gap-2">
+          <input type="text" name="query" placeholder="Instructor email or ID" class="flex-1 px-3 py-2 border border-gray-300 rounded-md" required>
+          <button type="submit" class="btn-primary text-sm">Add</button>
+        </div>
+      </form>
+      {% if co_teachers %}
+        <ul class="divide-y">
+          {% for ct in co_teachers %}
+            <li class="py-2 flex items-center justify-between">
+              <div>
+                <div class="font-medium">{{ ct.instructor.username }}</div>
+                <div class="text-xs text-gray-500">{{ ct.instructor.email }}</div>
+              </div>
+              <a class="text-red-600 hover:text-red-800 text-sm" href="{% url 'courses:remove_co_teacher' course.id ct.instructor.id %}">Remove</a>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="text-gray-600 text-sm">No co‑teachers yet.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,7 @@
+{% extends 'email/base_email.html' %}
+{% block subject %}New Enrollment - EduVanta{% endblock %}
+{% block content %}
+  <h3 class="heading">New Enrollment</h3>
+  <p>Your child <strong>{{ student.username }}</strong> has been enrolled in the course <span class="badge">{{ course.title }}</span>.</p>
+  <p>Department/Specialization: {{ course.department.name }} / {{ course.specialization.name }}{% if course.subspecialization %} / {{ course.subspecialization.name }}{% endif %}</p>
+{% endblock %}

@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block title %}My Courses - EduVanta{% endblock %}
+{% block content %}
+<div class="max-w-6xl mx-auto py-10 px-4">
+  <div class="flex items-center justify-between mb-6">
+    <h1 class="text-2xl font-bold">My Courses</h1>
+    <a href="{% url 'courses:wizard_start' %}" class="btn-primary text-sm">New Course</a>
+  </div>
+
+  {% if courses %}
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {% for course in courses %}
+      <div class="card p-5">
+        <h2 class="text-lg font-semibold mb-1">{{ course.title }}</h2>
+        <p class="text-sm text-gray-600 mb-2">{{ course.department.code }} / {{ course.specialization.name }}{% if course.subspecialization %} / {{ course.subspecialization.name }}{% endif %}</p>
+        <div class="flex items-center justify-between mt-3">
+          <a class="text-indigo-600 hover:text-indigo-800 text-sm" href="{% url 'courses:course_detail' course.id %}">View</a>
+          <a class="btn-outline text-sm py-2 px-4" href="{% url 'courses:course_roster' course.id %}">Manage Roster</a>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="text-gray-600">You are not assigned to any courses yet.</p>
+  {% endif %}
+</div>
+{% endblock %}

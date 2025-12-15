@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+{% block title %}Confirm Parent Link - OTP{% endblock %}
+{% block content %}
+<div class="max-w-md mx-auto py-12 px-4">
+  <h1 class="text-2xl font-bold mb-2">Confirm Parent Link</h1>
+  <p class="text-sm text-gray-600 mb-6">We sent a 6-digit OTP to your email. Enter it below to approve this parent link request.</p>
+
+  {% if messages %}
+  <div class="space-y-2 mb-4">
+    {% for message in messages %}
+      <div class="rounded-md px-3 py-2 text-sm {% if message.tags == 'error' %}bg-red-50 text-red-700 border border-red-200{% elif message.tags == 'success' %}bg-green-50 text-green-700 border border-green-200{% else %}bg-indigo-50 text-indigo-700 border border-indigo-200{% endif %}">{{ message }}</div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <form method="post" action="{% url 'accounts:verify_parent_link_otp' %}" class="space-y-4">
+    {% csrf_token %}
+    <input type="hidden" name="token" value="{{ token }}"/>
+    <div>
+      <label class="block text-sm font-medium text-gray-700">Enter OTP</label>
+      <input type="text" name="otp" pattern="\d{6}" maxlength="6" autofocus class="mt-1 w-full border rounded px-3 py-2" placeholder="000000" required>
+      <p class="mt-1 text-xs text-gray-500">The OTP expires in about 10 minutes.</p>
+    </div>
+    <div class="pt-2">
+      <button class="btn-primary">Confirm</button>
+      <a href="{% url 'accounts:dashboard' %}" class="btn-outline ml-2">Cancel</a>
+    </div>
+  </form>
+
+  <form method="post" action="{% url 'accounts:resend_parent_link_otp' %}" class="mt-4">
+    {% csrf_token %}
+    <input type="hidden" name="token" value="{{ token }}"/>
+    <button id="resend-btn" type="submit" class="inline-flex items-center px-3 py-1.5 rounded bg-gray-100 text-gray-800 border border-gray-200 hover:bg-gray-200">
+      Resend OTP
+    </button>
+    <p class="mt-1 text-xs text-gray-500">Limit: once per minute, up to 5 times per hour.</p>
+  </form>
+  <script>
+    (function(){
+      const btn = document.getElementById('resend-btn');
+      if(!btn) return;
+      const token = '{{ token|escapejs }}';
+      const KEY = 'plink_resend_ts_' + token;
+      const COOLDOWN = 60; // seconds
+      function setDisabled(sec){
+        btn.disabled = true;
+        btn.classList.add('opacity-60','cursor-not-allowed');
+        let left = Math.max(0, Math.floor(sec));
+        btn.textContent = `Resend OTP (${left}s)`;
+      }
+      function setEnabled(){
+        btn.disabled = false;
+        btn.classList.remove('opacity-60','cursor-not-allowed');
+        btn.textContent = 'Resend OTP';
+      }
+      function tick(){
+        const ts = parseInt(sessionStorage.getItem(KEY) || '0', 10);
+        if(!ts){ setEnabled(); return; }
+        const now = Math.floor(Date.now()/1000);
+        const elapsed = now - ts;
+        const remain = COOLDOWN - elapsed;
+        if(remain > 0){
+          setDisabled(remain);
+          window._plink_timer = setTimeout(tick, 1000);
+        } else {
+          setEnabled();
+          sessionStorage.removeItem(KEY);
+        }
+      }
+      tick();
+      // On submit, stamp the timestamp so the next render enforces cooldown
+      btn.closest('form').addEventListener('submit', function(){
+        const now = Math.floor(Date.now()/1000);
+        sessionStorage.setItem(KEY, String(now));
+        setDisabled(COOLDOWN);
+      });
+    })();
+  </script>
+</div>
+{% endblock %}

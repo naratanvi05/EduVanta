@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% block title %}Challenges - EduVanta{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto py-10 px-4">
+  <div class="flex items-center justify-between mb-6">
+    <h1 class="text-2xl font-bold">Challenges</h1>
+    <div class="text-xs text-gray-500">As of {{ now|date:'M d, Y H:i' }}</div>
+  </div>
+
+  {% if not_student %}
+  <div class="p-4 bg-yellow-50 border border-yellow-200 rounded">
+    <div class="text-sm text-yellow-800">Challenges are available for students only.</div>
+  </div>
+  {% endif %}
+
+  {% if challenges %}
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    {% for c in challenges %}
+    <div class="card card-hover p-5">
+      <div class="flex items-start justify-between">
+        <h2 class="text-lg font-semibold text-gray-900">{{ c.title }}</h2>
+        <span class="badge badge-secondary">+{{ c.xp_reward }} XP</span>
+      </div>
+      {% if c.description %}
+      <p class="mt-2 text-sm text-gray-600 line-clamp-3">{{ c.description }}</p>
+      {% endif %}
+      <div class="mt-4 text-xs text-gray-500">
+        {% if c.start_at %}
+          Starts: {{ c.start_at|date:'M d, Y H:i' }}
+        {% else %}
+          Starts: Now
+        {% endif %}
+        <span class="mx-1">•</span>
+        {% if c.end_at %}
+          Ends: {{ c.end_at|date:'M d, Y H:i' }}
+        {% else %}
+          No end date
+        {% endif %}
+      </div>
+      <div class="mt-4">
+        <button class="btn-outline text-sm">View Details</button>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="p-8 bg-white rounded-lg shadow text-center">
+    <div class="text-gray-400 text-4xl mb-2">🏆</div>
+    <div class="text-gray-800 font-medium">No active challenges right now</div>
+    <div class="text-gray-500 text-sm mt-1">Check back soon for new weekly and monthly challenges.</div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

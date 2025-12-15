@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% block title %}Manage Structure | {{ course.title }}{% endblock %}
+{% block content %}
+<div class="max-w-5xl mx-auto px-4 py-8">
+  <h1 class="text-2xl font-bold mb-6">Manage Structure — {{ course.title }}</h1>
+
+  <form method="post" action="{% url 'courses:add_module' course.id %}" class="mb-6 flex gap-2">
+    {% csrf_token %}
+    <input name="title" class="border rounded px-3 py-2 flex-1" placeholder="New module title" required>
+    <button class="bg-indigo-600 text-white px-4 py-2 rounded">Add Module</button>
+  </form>
+
+  {% if modules %}
+  <div class="space-y-6">
+    {% for m in modules %}
+    <div class="bg-white rounded shadow p-4">
+      <div class="flex items-center justify-between">
+        <h2 class="text-xl font-semibold">{{ m.order }}. {{ m.title }}</h2>
+        <form method="post" action="{% url 'courses:delete_module' m.id %}">
+          {% csrf_token %}
+          <button class="text-red-600 hover:underline" onclick="return confirm('Delete module and its lessons?')">Delete</button>
+        </form>
+      </div>
+      <div class="mt-4">
+        <form method="post" action="{% url 'courses:add_lesson' m.id %}" class="flex gap-2 mb-3">
+          {% csrf_token %}
+          <input name="title" class="border rounded px-3 py-2 flex-1" placeholder="New lesson title" required>
+          <button class="bg-gray-800 text-white px-4 py-2 rounded">Add Lesson</button>
+        </form>
+        <ul class="divide-y">
+          {% for l in m.lessons.all %}
+          <li class="py-2 flex items-center justify-between">
+            <div>
+              <span class="font-medium">{{ l.order }}. {{ l.title }}</span>
+            </div>
+            <div class="flex items-center gap-3">
+              <a href="{% url 'courses:edit_coding_assignment' l.id %}" class="text-indigo-600 hover:underline">Coding Assignment</a>
+              <form method="post" action="{% url 'courses:delete_lesson' l.id %}">
+                {% csrf_token %}
+                <button class="text-red-600 hover:underline" onclick="return confirm('Delete lesson?')">Delete</button>
+              </form>
+            </div>
+          </li>
+          {% empty %}
+          <li class="py-2 text-gray-500">No lessons yet.</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="bg-white rounded shadow p-6 text-center">
+    <p class="text-gray-700">No modules yet. Create the first module above.</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

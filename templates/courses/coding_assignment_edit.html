@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% block title %}Coding Assignment | {{ lesson.title }}{% endblock %}
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 py-8">
+  <h1 class="text-2xl font-bold mb-1">Coding Assignment</h1>
+  <p class="text-gray-600 mb-6">Lesson: {{ lesson.title }} · Module: {{ lesson.module.title }} · Course: {{ lesson.module.course.title }}</p>
+
+  <form method="post" class="space-y-4">
+    {% csrf_token %}
+    <div>
+      <label class="block text-sm text-gray-700">Language</label>
+      <select name="language" class="mt-1 w-full border rounded px-3 py-2">
+        {% with lang=assignment.language|default:'python' %}
+        <option value="python" {% if lang=='python' %}selected{% endif %}>Python</option>
+        <option value="js" {% if lang=='js' %}selected{% endif %}>JavaScript</option>
+        <option value="c" {% if lang=='c' %}selected{% endif %}>C</option>
+        <option value="cpp" {% if lang=='cpp' %}selected{% endif %}>C++</option>
+        <option value="java" {% if lang=='java' %}selected{% endif %}>Java</option>
+        {% endwith %}
+      </select>
+    </div>
+
+    <div>
+      <label class="block text-sm text-gray-700">Prompt</label>
+      <textarea name="prompt" rows="6" class="mt-1 w-full border rounded px-3 py-2" required>{{ assignment.prompt }}</textarea>
+    </div>
+
+    <div>
+      <label class="block text-sm text-gray-700">Starter Code (optional)</label>
+      <textarea name="starter_code" rows="6" class="mt-1 w-full border rounded px-3 py-2">{{ assignment.starter_code }}</textarea>
+    </div>
+
+    <div>
+      <label class="block text-sm text-gray-700">Tests JSON</label>
+      <textarea name="tests" rows="8" class="mt-1 w-full border rounded px-3 py-2" placeholder='{"public": [{"input": "2 3", "output": "5"}], "hidden": []}'>{{ assignment.tests|json_script:"tests_data" }}</textarea>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div>
+        <label class="block text-sm text-gray-700">Time Limit (ms)</label>
+        <input name="time_limit_ms" type="number" value="{{ assignment.time_limit_ms|default:2000 }}" class="mt-1 w-full border rounded px-3 py-2">
+      </div>
+      <div>
+        <label class="block text-sm text-gray-700">Memory Limit (KB)</label>
+        <input name="memory_limit_kb" type="number" value="{{ assignment.memory_limit_kb|default:262144 }}" class="mt-1 w-full border rounded px-3 py-2">
+      </div>
+      <div class="flex items-end gap-2">
+        <label class="inline-flex items-center">
+          <input type="checkbox" name="auto_grade" {% if assignment.auto_grade %}checked{% endif %} class="mr-2"> Auto-grade
+        </label>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-3">
+      <a href="{% url 'courses:manage_structure' lesson.module.course.id %}" class="btn-outline">Cancel</a>
+      <button class="btn-primary">Save</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,20 @@
+{% extends "admin/change_list.html" %}
+{% load static %}
+
+{% block object-tools %}
+{{ block.super }}
+<ul class="object-tools">
+  <li>
+    <a href="{% url 'admin:accounts_parentinvite_analytics' %}?days=30" class="addlink">View Analytics (30d)</a>
+  </li>
+  <li>
+    <a href="{% url 'admin:accounts_parentinvite_analytics' %}?days=0" class="addlink">View Analytics (All time)</a>
+  </li>
+  <li>
+    <a href="{% url 'admin:accounts_parentinvite_analytics_export' %}?days=30" class="addlink">Export CSV (30d)</a>
+  </li>
+  <li>
+    <a href="{% url 'admin:accounts_parentinvite_analytics_export' %}?days=0" class="addlink">Export CSV (All time)</a>
+  </li>
+</ul>
+{% endblock %}

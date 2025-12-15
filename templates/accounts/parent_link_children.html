@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% block title %}Link Children - EduVanta{% endblock %}
+{% block content %}
+<div class="max-w-2xl mx-auto py-10 px-4">
+  <div class="flex items-center justify-between mb-6">
+    <h1 class="text-2xl font-bold">Link a Child</h1>
+    <a href="{% url 'accounts:parent_review_children' %}"
+       class="inline-flex items-center px-3 py-2 rounded-md bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200"
+       title="Open Review Children">
+       <i class="fas fa-children mr-2"></i> Review Children
+    </a>
+  </div>
+
+  {% if messages %}
+    {% for message in messages %}
+      <div class="mb-4 p-3 rounded {% if 'error' in message.tags %}bg-red-50 text-red-800{% else %}bg-green-50 text-green-800{% endif %}">
+        {{ message }}
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <form method="post" class="space-y-4">
+    {% csrf_token %}
+    <label for="query" class="block text-sm font-medium text-gray-700">Child Email or Student ID (username)</label>
+    <input type="text" id="query" name="query" required class="w-full px-3 py-2 border border-gray-300 rounded-md">
+    <button type="submit" class="px-4 py-2 rounded bg-indigo-600 text-white hover:bg-indigo-700">Link Child</button>
+  </form>
+
+  <div class="mt-8 p-6 bg-white rounded shadow">
+    <h2 class="text-lg font-semibold mb-3">Currently Linked Children</h2>
+    {% if linked %}
+      <ul class="list-disc ml-6 space-y-1">
+        {% for link in linked %}
+          <li>{{ link.child.username }} <span class="text-gray-500">({{ link.child.email }})</span></li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="text-gray-600 text-sm">No children linked yet.</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

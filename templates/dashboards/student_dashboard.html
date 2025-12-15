@@ -1,0 +1,223 @@
+{% extends 'base.html' %}
+{% block title %}Student Dashboard - EduVanta{% endblock %}
+{% block content %}
+<div class="max-w-6xl mx-auto py-10 px-4">
+  {% if request.user.role == 'student' %}
+  {% if show_profile_setup_banner and not request.user.is_profile_completed %}
+  <div class="mb-6 p-4 rounded-lg bg-indigo-50 border border-indigo-200">
+    <div class="flex items-start gap-3">
+      <div class="mt-1 text-indigo-600">
+        <i class="fas fa-info-circle"></i>
+      </div>
+      <div class="flex-1">
+        <p class="text-sm text-indigo-900">You skipped profile setup once. You can update your profile anytime in Settings.</p>
+        <div class="mt-2">
+          <a href="/accounts/settings/" class="btn-primary text-xs">Open Settings</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+  {% if request.user.is_staff and pending_parent_requests %}
+  <div class="mb-4 p-3 rounded bg-gray-50 border border-gray-200">
+    <div class="text-xs text-gray-700 font-semibold">Debug: Pending ParentLinkRequests ({{ pending_parent_requests|length }})</div>
+    <ul class="mt-1 text-xs text-gray-600 space-y-1">
+      {% for req in pending_parent_requests %}
+        <li>
+          token={{ req.token }} | parent={{ req.parent.email }} | student_id={{ req.student_id|default:'None' }} | ident={{ req.target_identifier }} | status={{ req.status }}
+        </li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+  {% if pending_parent_requests %}
+  <div class="mb-6 p-4 rounded-lg bg-blue-50 border border-blue-200" role="region" aria-labelledby="parent-link-banner-title" aria-live="polite">
+    <div class="flex items-start gap-3">
+      <div class="mt-1 text-blue-600" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM9 8a1 1 0 112 0v4a1 1 0 11-2 0V8zm1 8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"/></svg>
+      </div>
+      <div class="flex-1">
+        <h2 id="parent-link-banner-title" class="text-sm font-semibold text-blue-900">Parent link requests</h2>
+        <ul class="mt-2 space-y-2 text-sm" role="list">
+          {% for req in pending_parent_requests %}
+          <li class="flex flex-col md:flex-row md:items-center md:justify-between gap-2" role="listitem">
+            <div>
+              <span class="sr-only">Request from parent:</span>
+              <strong>{{ req.parent.get_full_name|default:req.parent.username }}</strong>
+              <span class="text-gray-600">requested to link you</span>
+              <span class="text-gray-500">({{ req.target_identifier }})</span>
+              {% if req.expires_at %}
+              <span class="ml-2 text-xs text-blue-700">Expires in {{ req.expires_at|timesince }}.</span>
+              {% endif %}
+            </div>
+            <div class="flex items-center gap-2 text-sm">
+              <a class="inline-block px-2 py-1 rounded bg-green-600 text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-400"
+                 href="{% url 'accounts:approve_parent_link' %}?token={{ req.token }}"
+                 aria-label="Approve parent link request from {{ req.parent.get_full_name|default:req.parent.username }}">
+                 Approve
+              </a>
+              <a class="inline-block px-2 py-1 rounded bg-red-600 text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-400"
+                 href="{% url 'accounts:decline_parent_link' %}?token={{ req.token }}"
+                 aria-label="Decline parent link request from {{ req.parent.get_full_name|default:req.parent.username }}">
+                 Decline
+              </a>
+            </div>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+  {% if not request.user.is_profile_completed %}
+  <div class="mb-6 p-4 rounded-lg bg-yellow-50 border border-yellow-200">
+    <div class="flex items-start gap-3">
+      <div class="mt-1 text-yellow-600">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM9 8a1 1 0 112 0v4a1 1 0 11-2 0V8zm1 8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"/></svg>
+      </div>
+      <div class="flex-1">
+        <p class="text-sm text-yellow-900">Your profile isn’t fully set up yet. You can complete it later from Settings.</p>
+        <div class="mt-2 space-x-2">
+          <a href="/accounts/settings/" class="inline-block text-xs px-3 py-1 rounded bg-indigo-600 text-white hover:bg-indigo-700">Go to Settings</a>
+          <a href="{% url 'accounts:remind_later' %}" class="inline-block text-xs px-3 py-1 rounded bg-yellow-100 text-yellow-800 hover:bg-yellow-200">Remind me later</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+  <div class="flex items-center justify-between mb-6">
+    <h1 class="text-2xl font-bold">Welcome, {{ request.user.first_name|default:request.user.username }}</h1>
+    <div class="space-x-2">
+      <a href="{% url 'courses:student_browse' %}" class="btn-primary text-sm">Browse Courses</a>
+      <a href="{% url 'accounts:sync_enrollments' %}" class="btn-outline text-sm">Sync Enrollments</a>
+      <a href="{% url 'accounts:student_edit_areas' %}" class="btn-outline text-sm">Edit Learning Areas</a>
+      <a href="{% url 'gamification:challenges_list' %}" class="btn-outline text-sm">Challenges</a>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 gap-6">
+    <div class="p-6 bg-white rounded-lg shadow">
+      <h2 class="text-lg font-semibold mb-4">Your Enrolled Courses</h2>
+      {% if enrollments %}
+        <ul class="space-y-4">
+          {% for e in enrollments %}
+          <li class="border rounded-lg p-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="font-semibold">{{ e.course.title }}</div>
+                <div class="text-xs text-gray-500">{{ e.course.department.code }} / {{ e.course.specialization.name }}{% if e.course.subspecialization %} / {{ e.course.subspecialization.name }}{% endif %}</div>
+              </div>
+              <div class="w-40">
+                <div class="progress-bar"><div class="progress-bar-fill" style="width: {{ e.progress_percent|default_if_none:'0' }}%;"></div></div>
+                <div class="text-xs text-gray-500 mt-1">Progress: {{ e.progress_percent|default:0 }}% • XP: {{ e.earned_xp|default:0 }} / {{ e.course.max_xp|default:100 }} {% if e.grade %}| Grade: {{ e.grade }}{% endif %}</div>
+              </div>
+            </div>
+            <div class="mt-2 text-sm text-gray-700">
+              <span class="font-medium">Instructor:</span> {{ e.course.instructor.username|default:"TBA" }}
+            </div>
+            {% if e.coteachers %}
+              <div class="mt-1 text-xs text-gray-600">
+                <span class="font-medium">Co‑teachers:</span>
+                {% for t in e.coteachers %}
+                  {{ t.username }}{% if not forloop.last %}, {% endif %}
+                {% endfor %}
+              </div>
+            {% endif %}
+            {% if e.sparkline %}
+            <div class="mt-3">
+              <div class="text-xs text-gray-500 mb-1">14‑day Progress</div>
+              {# Simple inline SVG sparkline (scaled 0..100 to width, 0..24 to height). Invert Y via transform. #}
+              <svg viewBox="0 0 100 24" preserveAspectRatio="none" class="w-full h-6">
+                {% if e.sparkline|length > 1 %}
+                <g transform="translate(0,24) scale(1,-1)">
+                  <polyline fill="none" stroke="#4f46e5" stroke-width="1.5" points="
+                    {% for val in e.sparkline %}
+                      {% widthratio forloop.counter0 13 100 as x %}
+                      {% widthratio val 100 24 as y %}
+                      {{ x }},{{ y }}{% if not forloop.last %} {% endif %}
+                    {% endfor %}
+                  "></polyline>
+                </g>
+                {% endif %}
+              </svg>
+            </div>
+            {% endif %}
+          </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="text-gray-600 text-sm">You are not enrolled in any courses yet. Browse and enroll in courses to get started.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- XP Overview moved below courses for cleaner hierarchy -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 my-6">
+    <div class="p-4 bg-white rounded-lg shadow">
+      <div class="text-sm text-gray-500">Total XP</div>
+      <div class="mt-1 text-2xl font-bold">{{ xp_total_earned|default:0 }}<span class="text-base text-gray-400"> / {{ xp_total_max|default:0 }}</span></div>
+      <div class="mt-2 h-2 w-full bg-gray-200 rounded">
+        <div class="h-2 bg-indigo-600 rounded" style="width: {{ xp_total_percent|default:0 }}%;"></div>
+      </div>
+      <div class="mt-1 text-xs text-gray-500">{{ xp_total_percent|default:0 }}% overall</div>
+      {% if streak %}
+      <div class="mt-3 inline-flex items-center gap-2 px-2 py-1 rounded-full text-xs bg-green-50 text-green-700 border border-green-200">
+        <span aria-hidden="true">🔥</span>
+        <span>Streak: {{ streak.count|default:0 }} day{{ streak.count|default:0|pluralize }}</span>
+        <span class="text-green-600/60">• Best: {{ streak.longest|default:0 }}</span>
+      </div>
+      {% endif %}
+    </div>
+    <div class="p-4 bg-white rounded-lg shadow md:col-span-2">
+      <div class="flex items-center justify-between">
+        <div class="text-sm text-gray-500">Badges</div>
+        {% if next_milestone %}
+        <div class="text-xs text-gray-500">Next: {{ next_milestone }} XP ({{ next_milestone_remaining }} left)</div>
+        {% endif %}
+      </div>
+      <div class="mt-2 flex flex-wrap gap-2">
+        {% for b in badges %}
+          <span class="px-2 py-1 text-xs rounded border {% if b.achieved %}bg-green-50 border-green-200 text-green-700{% else %}bg-gray-50 border-gray-200 text-gray-500{% endif %}">
+            {{ b.name }}
+          </span>
+        {% empty %}
+          <span class="text-xs text-gray-500">No badges yet. Start learning to earn XP!</span>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Leaderboard moved further down for better flow -->
+  <div class="mb-6 p-4 bg-white rounded-lg shadow">
+    <div class="flex items-center justify-between">
+      <h2 class="text-lg font-semibold">Global Leaderboard</h2>
+      {% if leaderboard_user_rank %}
+      <div class="text-xs text-gray-500">Your rank: #{{ leaderboard_user_rank }}</div>
+      {% endif %}
+    </div>
+    <div class="mt-3 overflow-x-auto">
+      <table class="min-w-full text-sm">
+        <thead>
+          <tr class="text-left text-gray-500">
+            <th class="py-2 pr-4">Rank</th>
+            <th class="py-2 pr-4">Student</th>
+            <th class="py-2 pr-4">Total XP</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in leaderboard_top %}
+          <tr class="border-t">
+            <td class="py-2 pr-4">#{{ forloop.counter }}</td>
+            <td class="py-2 pr-4">{{ row.student__first_name|default:row.student__username }} {{ row.student__last_name }}</td>
+            <td class="py-2 pr-4">{{ row.total_xp|default:0 }}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="3" class="py-3 text-gray-500">No leaderboard data yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% block title %}My Challenge Progress - EduVanta{% endblock %}
+{% block content %}
+<div class="max-w-6xl mx-auto py-10 px-4">
+  <div class="flex items-center justify-between mb-6">
+    <h1 class="text-2xl font-bold">My Challenges</h1>
+    <div class="text-xs text-gray-500">Your submissions and progress</div>
+  </div>
+
+  {% if parts %}
+  <div class="overflow-x-auto bg-white rounded-lg shadow">
+    <table class="min-w-full text-sm">
+      <thead>
+        <tr class="text-left text-gray-500 border-b">
+          <th class="py-2 px-3">Challenge</th>
+          <th class="py-2 px-3">Status</th>
+          <th class="py-2 px-3">Awarded XP</th>
+          <th class="py-2 px-3">Completed at</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in parts %}
+        <tr class="border-b">
+          <td class="py-2 px-3 font-medium">{{ p.challenge.title }}</td>
+          <td class="py-2 px-3">
+            {% if p.status == 'completed' %}
+              <span class="badge badge-secondary">Completed</span>
+            {% else %}
+              <span class="badge">Pending</span>
+            {% endif %}
+          </td>
+          <td class="py-2 px-3">{{ p.awarded_xp }}</td>
+          <td class="py-2 px-3 text-xs text-gray-600">{% if p.completed_at %}{{ p.completed_at|date:'M d, Y H:i' }}{% else %}—{% endif %}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="p-8 bg-white rounded-lg shadow text-center">
+    <div class="text-gray-400 text-4xl mb-2">📘</div>
+    <div class="text-gray-800 font-medium">No challenge activity yet</div>
+    <div class="text-gray-500 text-sm mt-1">Join a challenge to start earning bonus XP.</div>
+    <a href="{% url 'gamification:challenges_list' %}" class="btn-primary mt-4 inline-block">Browse Challenges</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

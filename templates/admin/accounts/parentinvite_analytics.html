@@ -1,0 +1,131 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+{% block extrastyle %}
+  <style>
+    .card { background:#fff; border-radius:12px; padding:16px; box-shadow:0 2px 8px rgba(0,0,0,0.06); margin-bottom:16px; }
+    .kpi { display:flex; gap:12px; flex-wrap:wrap; }
+    .kpi .box { flex:1 1 180px; background:#f8fafc; border:1px solid #e5e7eb; border-radius:12px; padding:12px; }
+    .muted { color:#6b7280; }
+  </style>
+{% endblock %}
+{% block content %}
+  <h1>Parent Invite Analytics</h1>
+  <p class="muted">Time window: last {{ days }} days{% if days == 0 %} (all time){% endif %}</p>
+
+  <div class="kpi">
+    <div class="box"><div class="muted">Total Deliveries</div><div style="font-size:24px; font-weight:700;">{{ total }}</div></div>
+    <div class="box"><div class="muted">Successful</div><div style="font-size:24px; font-weight:700;">{{ ok_count }}</div></div>
+    <div class="box"><div class="muted">Failed</div><div style="font-size:24px; font-weight:700;">{{ fail_count }}</div></div>
+    <div class="box"><div class="muted">Success Rate</div><div style="font-size:24px; font-weight:700;">{{ success_rate|floatformat:2 }}%</div></div>
+  </div>
+
+  <div class="card">
+    <h2>Daily</h2>
+    <canvas id="byDay" height="80"></canvas>
+  </div>
+
+  <div class="card">
+    <h2>Weekly</h2>
+    <canvas id="byWeek" height="80"></canvas>
+  </div>
+
+  <div class="card">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <h2 style="margin:0;">Top domains by failure</h2>
+      <a class="button" href="{% url 'admin:accounts_parentinvite_analytics_export' %}?days={{ days }}">Export CSV</a>
+    </div>
+    {% if top_domains %}
+    <table class="admin-table" style="width:100%; border-collapse:collapse; margin-top:8px;">
+      <thead>
+        <tr>
+          <th style="text-align:left; border-bottom:1px solid #e5e7eb; padding:6px;">Domain</th>
+          <th style="text-align:right; border-bottom:1px solid #e5e7eb; padding:6px;">Failed</th>
+          <th style="text-align:right; border-bottom:1px solid #e5e7eb; padding:6px;">Total</th>
+          <th style="text-align:right; border-bottom:1px solid #e5e7eb; padding:6px;">Failure %</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in top_domains %}
+        <tr>
+          <td style="padding:6px; border-bottom:1px solid #f1f5f9;">{{ row.domain }}</td>
+          <td style="padding:6px; text-align:right; border-bottom:1px solid #f1f5f9;">{{ row.failed }}</td>
+          <td style="padding:6px; text-align:right; border-bottom:1px solid #f1f5f9;">{{ row.total }}</td>
+          <td style="padding:6px; text-align:right; border-bottom:1px solid #f1f5f9;">{{ row.fail_rate|floatformat:1 }}%</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+      <p class="muted">No domain-level failures in this window.</p>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <h2>Per-parent outcomes</h2>
+    {% if per_parent %}
+    <table class="admin-table" style="width:100%; border-collapse:collapse; margin-top:8px;">
+      <thead>
+        <tr>
+          <th style="text-align:left; border-bottom:1px solid #e5e7eb; padding:6px;">Parent Email</th>
+          <th style="text-align:right; border-bottom:1px solid #e5e7eb; padding:6px;">Total</th>
+          <th style="text-align:right; border-bottom:1px solid #e5e7eb; padding:6px;">Successful</th>
+          <th style="text-align:right; border-bottom:1px solid #e5e7eb; padding:6px;">Success %</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in per_parent %}
+        {% with total=row.total|default:0 ok=row.ok|default:0 %}
+        {% with rate=0 %}{% endwith %}
+        <tr>
+          <td style="padding:6px; border-bottom:1px solid #f1f5f9;">{{ row.invite__parent__email|default:'(unknown)' }}</td>
+          <td style="padding:6px; text-align:right; border-bottom:1px solid #f1f5f9;">{{ total }}</td>
+          <td style="padding:6px; text-align:right; border-bottom:1px solid #f1f5f9;">{{ ok }}</td>
+          <td style="padding:6px; text-align:right; border-bottom:1px solid #f1f5f9;">{% if total %}{{ row.success_rate|floatformat:1 }}%{% else %}—{% endif %}</td>
+        </tr>
+        {% endwith %}
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+      <p class="muted">No per-parent data in this window.</p>
+    {% endif %}
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    const dayLabels = {{ day_labels|safe }};
+    const dayTotal = {{ day_total|safe }};
+    const dayOk = {{ day_ok|safe }};
+
+    const weekLabels = {{ week_labels|safe }};
+    const weekTotal = {{ week_total|safe }};
+    const weekOk = {{ week_ok|safe }};
+
+    function lineChart(ctx, labels, total, ok){
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [
+            { label: 'Total', data: total, borderColor: '#64748b', backgroundColor: 'rgba(100,116,139,0.2)', tension: 0.3 },
+            { label: 'Successful', data: ok, borderColor: '#16a34a', backgroundColor: 'rgba(22,163,74,0.2)', tension: 0.3 },
+          ]
+        },
+        options: {
+          responsive: true,
+          interaction: { mode: 'index', intersect: false },
+          stacked: false,
+          plugins: { legend: { position: 'bottom' } },
+          scales: {
+            y: { beginAtZero: true }
+          }
+        }
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', function(){
+      lineChart(document.getElementById('byDay').getContext('2d'), dayLabels, dayTotal, dayOk);
+      lineChart(document.getElementById('byWeek').getContext('2d'), weekLabels, weekTotal, weekOk);
+    });
+  </script>
+{% endblock %}

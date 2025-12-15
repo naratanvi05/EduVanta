@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% block title %}Edit Learning Areas - EduVanta{% endblock %}
+{% block extra_js %}
+<script>
+  function filterSubspecs() {
+    const specSelect = document.getElementById('specializations');
+    const subspecSelect = document.getElementById('subspecializations');
+    const selectedSpecs = Array.from(specSelect.selectedOptions).map(o => o.value);
+    Array.from(subspecSelect.options).forEach(opt => {
+      const specId = opt.getAttribute('data-spec');
+      opt.hidden = selectedSpecs.length > 0 && !selectedSpecs.includes(specId);
+    });
+  }
+  document.addEventListener('DOMContentLoaded', function() {
+    const specSelect = document.getElementById('specializations');
+    if (specSelect) {
+      specSelect.addEventListener('change', filterSubspecs);
+      filterSubspecs();
+    }
+  });
+</script>
+{% endblock %}
+{% block content %}
+<div class="max-w-4xl mx-auto py-10 px-4">
+  <div class="flex items-center justify-between mb-6">
+    <h1 class="text-2xl font-bold">Edit Learning Areas</h1>
+    <a href="{% url 'accounts:dashboard' %}" class="btn-outline text-sm">Back to Dashboard</a>
+  </div>
+
+  <form method="post" class="space-y-6">
+    {% csrf_token %}
+
+    <div>
+      <label for="departments" class="block text-sm font-medium text-gray-700">Departments (you may select multiple)</label>
+      <div class="mt-1 form-input-wrapper">
+        <select name="departments" id="departments" multiple size="6"
+                class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+          {% for dept in departments %}
+            <option value="{{ dept.id }}" {% if dept.id in selected_depts %}selected{% endif %}>{{ dept.code }} / {{ dept.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+
+    <div>
+      <label for="specializations" class="block text-sm font-medium text-gray-700">Specializations (you may select multiple)</label>
+      <div class="mt-1 form-input-wrapper">
+        <select name="specializations" id="specializations" multiple size="8"
+                class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+          {% for spec in specializations %}
+            <option value="{{ spec.id }}" {% if spec.id in selected_specs %}selected{% endif %}>{{ spec.department.code }} / {{ spec.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+
+    <div>
+      <label for="subspecializations" class="block text-sm font-medium text-gray-700">Sub-specializations (you may select multiple)</label>
+      <div class="mt-1 form-input-wrapper">
+        <select name="subspecializations" id="subspecializations" multiple size="10"
+                class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+          {% for ss in subspecializations %}
+            <option value="{{ ss.id }}" data-spec="{{ ss.specialization.id }}" {% if ss.id in selected_subspecs %}selected{% endif %}>{{ ss.specialization.name }} / {{ ss.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <p class="mt-1 text-xs text-gray-500">List is filtered by your selected specializations.</p>
+    </div>
+
+    <div class="flex items-center gap-3">
+      <button type="submit" class="btn-primary">Save & Sync</button>
+      <a href="{% url 'accounts:dashboard' %}" class="btn-outline">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

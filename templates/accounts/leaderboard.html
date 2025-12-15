@@ -1,0 +1,154 @@
+{% extends 'base.html' %}
+{% block title %}Leaderboard - EduVanta{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto py-10 px-4">
+  <div class="flex items-center justify-between mb-6">
+    <div>
+      <h1 class="text-2xl font-bold">Leaderboard</h1>
+      <div class="flex items-center gap-3 mt-1">
+        <button id="xp-help-btn"
+          class="text-xs px-2 py-1 rounded bg-indigo-50 text-indigo-700 hover:bg-indigo-100">
+          How XP works
+        </button>
+        {% if window_start %}
+          <div class="text-xs text-gray-500">
+            Window starts {{ window_start|date:"M d, Y" }}
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="flex items-center gap-3">
+      <div>
+        <label class="text-xs text-gray-500 mr-2">Window</label>
+        <select id="lb-window" class="border rounded-md px-2 py-1 text-sm">
+          <option value="all" {% if window == 'all' %}selected{% endif %}>All-time</option>
+          <option value="month" {% if window == 'month' %}selected{% endif %}>Monthly</option>
+          <option value="week" {% if window == 'week' %}selected{% endif %}>Weekly</option>
+          <option value="today" {% if window == 'today' %}selected{% endif %}>Today</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="text-xs text-gray-500 mr-2">Course</label>
+        <select id="lb-course" class="border rounded-md px-2 py-1 text-sm min-w-[12rem]">
+          <option value="0" {% if not selected_course_id %}selected{% endif %}>
+            All courses
+          </option>
+          {% for c in courses %}
+            <option value="{{ c.id }}"
+              {% if selected_course_id == c.id %}selected{% endif %}>
+              {{ c.title }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      {% if linked_children %}
+      <div>
+        <label class="text-xs text-gray-500 mr-2">Find my child</label>
+        <select id="lb-focus-child" class="border rounded-md px-2 py-1 text-sm min-w-[10rem]">
+          <option value="0" {% if not focus_child_id %}selected{% endif %}>None</option>
+          {% for ch in linked_children %}
+            <option value="{{ ch.id }}"
+              {% if focus_child_id == ch.id %}selected{% endif %}>
+              {{ ch.get_full_name|default:ch.username }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+      {% endif %}
+
+      <label class="inline-flex items-center text-xs gap-2 select-none">
+        <input id="lb-anon" type="checkbox"
+          class="rounded border-gray-300"
+          {% if anonymize %}checked{% endif %}>
+        <span class="text-gray-600">Anonymize</span>
+      </label>
+
+      <button id="lb-apply"
+        class="text-xs px-3 py-1.5 rounded bg-gray-100 hover:bg-gray-200">
+        Apply
+      </button>
+    </div>
+  </div>
+
+  {% if my_rank %}
+  <div class="mb-6 p-4 bg-indigo-50 border border-indigo-200 rounded-lg">
+    <div class="flex items-center justify-between">
+      <div>
+        <div class="text-sm text-indigo-800">Your Rank</div>
+        <div class="text-lg font-semibold text-indigo-900">
+          #{{ my_rank.rank }} of {{ total_competitors }}
+        </div>
+      </div>
+      <div class="text-right">
+        <div class="text-sm text-indigo-800">Your XP</div>
+        <div class="text-lg font-semibold text-indigo-900">
+          {{ my_rank.xp }}
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="bg-white rounded-lg shadow overflow-hidden">
+    <table class="min-w-full text-sm">
+      <thead class="bg-gray-50">
+        <tr>
+          <th class="px-4 py-2 text-left">Rank</th>
+          <th class="px-4 py-2 text-left">Learner</th>
+          <th class="px-4 py-2 text-left">XP</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if rows %}
+          {% for r in rows %}
+          <tr class="border-t hover:bg-gray-50">
+            <td class="px-4 py-2">#{{ r.rank }}</td>
+            <td class="px-4 py-2">
+              <div class="flex items-center gap-2">
+                {% if anonymize %}
+                  <div class="w-8 h-8 rounded-full bg-gray-200 text-gray-700
+                              flex items-center justify-center text-xs font-semibold">
+                    ?
+                  </div>
+                  <div>
+                    <div class="font-medium">Learner #{{ r.user.id }}</div>
+                    <div class="text-xs text-gray-500">
+                      Joined {{ r.user.date_joined|date:"M Y" }}
+                    </div>
+                  </div>
+                {% else %}
+                  <div class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700
+                              flex items-center justify-center text-xs font-semibold">
+                    {{ r.user.first_name|default:r.user.username|first|upper }}
+                  </div>
+                  <div>
+                    <div class="font-medium">
+                      {{ r.user.get_full_name|default:r.user.username }}
+                    </div>
+                    <div class="text-xs text-gray-500">
+                      Joined {{ r.user.date_joined|date:"M Y" }}
+                    </div>
+                  </div>
+                {% endif %}
+              </div>
+            </td>
+            <td class="px-4 py-2 font-semibold">{{ r.xp }}</td>
+          </tr>
+          {% endfor %}
+        {% else %}
+          <tr>
+            <td colspan="3"
+              class="px-4 py-6 text-center text-gray-600">
+              No data yet.
+            </td>
+          </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

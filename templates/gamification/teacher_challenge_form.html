@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% block title %}New Challenge - EduVanta{% endblock %}
+{% block content %}
+<div class="max-w-lg mx-auto py-10 px-4">
+  <h1 class="text-2xl font-bold mb-4">Create Challenge</h1>
+
+  {% if errors %}
+  <div class="mb-4 p-3 rounded border border-red-200 bg-red-50 text-sm text-red-700">
+    <ul class="list-disc pl-5">
+      {% for e in errors %}<li>{{ e }}</li>{% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+
+  <form method="post" class="space-y-4">
+    {% csrf_token %}
+    <div>
+      <label class="block text-sm font-medium text-gray-700">Title</label>
+      <input type="text" name="title" class="mt-1 w-full border rounded px-3 py-2" required>
+    </div>
+    <div>
+      <label class="block text-sm font-medium text-gray-700">Description</label>
+      <textarea name="description" rows="4" class="mt-1 w-full border rounded px-3 py-2"></textarea>
+    </div>
+    <div>
+      <label class="block text-sm font-medium text-gray-700">XP Reward</label>
+      <input type="number" name="xp_reward" min="1" value="50" class="mt-1 w-full border rounded px-3 py-2" required>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Start At</label>
+        <input type="datetime-local" name="start_at" class="mt-1 w-full border rounded px-3 py-2">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700">End At</label>
+        <input type="datetime-local" name="end_at" class="mt-1 w-full border rounded px-3 py-2">
+      </div>
+    </div>
+    <div class="pt-2">
+      <button class="btn-primary">Create</button>
+      <a href="{% url 'gamification:teacher_my_challenges' %}" class="btn-outline ml-2">Cancel</a>
+    </div>
+  </form>
+
+  <p class="mt-4 text-xs text-gray-500">Note: Challenges require admin approval before students can see them.</p>
+</div>
+{% endblock %}

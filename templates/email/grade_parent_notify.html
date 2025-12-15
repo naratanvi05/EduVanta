@@ -1,0 +1,7 @@
+{% extends 'email/base_email.html' %}
+{% block subject %}Grade Updated - EduVanta{% endblock %}
+{% block content %}
+  <h3 class="heading">Grade Updated</h3>
+  <p>Your child <strong>{{ student.username }}</strong> has an updated grade in <span class="badge">{{ course.title }}</span>.</p>
+  <p>Current grade: <strong>{{ grade }}</strong></p>
+{% endblock %}

@@ -1,0 +1,727 @@
+{% extends 'base.html' %}
+{% block title %}Create Course (Wizard) - EduVanta{% endblock %}
+{% block content %}
+<div class="max-w-5xl mx-auto py-10 px-4">
+  <div class="mb-4">
+    <h1 class="text-2xl font-bold">Course Wizard</h1>
+    <!-- Breadcrumb -->
+    <nav class="mt-1 text-sm text-gray-500" aria-label="Breadcrumb">
+      <ol class="flex items-center gap-1 flex-wrap">
+        <li><a href="{% url 'accounts:dashboard' %}" class="hover:text-indigo-600">Dashboard</a></li>
+        <li class="mx-1">/</li>
+        <li><a href="{% url 'courses:instructor_my_courses' %}" class="hover:text-indigo-600">My Courses</a></li>
+        <li class="mx-1">/</li>
+        <li class="text-gray-800">New Course</li>
+        <li class="mx-1">•</li>
+        <li id="crumb-step" class="text-indigo-700 font-medium">Step: Basic</li>
+      </ol>
+    </nav>
+  </div>
+
+  <!-- Sticky wizard nav -->
+  <div class="sticky top-16 z-40">
+    <div class="bg-white/90 backdrop-blur rounded-xl shadow-sm border px-4 py-2 flex items-center justify-between overflow-x-auto">
+      <a href="{% url 'courses:instructor_my_courses' %}" class="btn-outline text-xs md:text-sm whitespace-nowrap mr-3">← Back to My Courses</a>
+      <div class="flex items-center gap-2 text-xs md:text-sm mx-2">
+        <button class="step-chip active" data-step="basic">1 Basic</button>
+        <button class="step-chip" data-step="structure">2 Structure</button>
+        <button class="step-chip" data-step="content">3 Content</button>
+        <button class="step-chip" data-step="assessments">4 Assessments</button>
+        <button class="step-chip" data-step="pricing">5 Pricing</button>
+        <button class="step-chip" data-step="schedule">6 Schedule</button>
+        <button class="step-chip" data-step="extras">7 Extras</button>
+        <button class="step-chip" data-step="preview">8 Preview</button>
+      </div>
+      <button id="btn-publish" class="btn-primary text-xs md:text-sm whitespace-nowrap ml-3">Publish</button>
+    </div>
+  </div>
+
+  <div id="wizard" data-draft-id="{{ draft.id }}">
+
+    <!-- Basic -->
+    <div class="card p-6 step-panel" data-step-panel="basic">
+      <h2 class="text-lg font-semibold mb-4">Basic Info</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Course Title *</label>
+          <input id="title" class="mt-1 w-full border rounded-md px-3 py-2" placeholder="Intro to Python for Data Science" value="{{ draft.title }}"/>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Subtitle</label>
+          <input id="subtitle" class="mt-1 w-full border rounded-md px-3 py-2" placeholder="Learn Python, pandas & visualization — hands-on projects." />
+        </div>
+        <div class="md:col-span-2">
+          <label class="block text-sm font-medium text-gray-700">Short Description</label>
+          <input id="short_description" class="mt-1 w-full border rounded-md px-3 py-2" placeholder="Beginner-friendly course that gets you coding in 8 weeks." />
+        </div>
+        <div class="md:col-span-2">
+          <label class="block text-sm font-medium text-gray-700">Long Description</label>
+          <textarea id="long_description" rows="6" class="mt-1 w-full border rounded-md px-3 py-2" placeholder="Who it’s for, outcomes, projects..."></textarea>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Department</label>
+          <select id="department" class="mt-1 w-full border rounded-md px-3 py-2">
+            <option value="">-- Select --</option>
+            {% for d in departments %}
+            <option value="{{ d.id }}">{{ d.code }} — {{ d.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Specialization</label>
+          <select id="specialization" class="mt-1 w-full border rounded-md px-3 py-2">
+            <option value="">-- Select --</option>
+            {% for s in specializations %}
+            <option value="{{ s.id }}">{{ s.department.code }} — {{ s.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Sub-specialization (optional)</label>
+          <select id="subspecialization" class="mt-1 w-full border rounded-md px-3 py-2">
+            <option value="">-- Select --</option>
+            {% for ss in subspecializations %}
+            <option value="{{ ss.id }}">{{ ss.specialization.name }} — {{ ss.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      <div class="mt-6 flex items-center gap-3">
+        <button id="btn-save" class="btn-outline">Save as Draft</button>
+        <button class="btn-outline next-step" data-next="structure">Next: Structure →</button>
+        <span id="save-status" class="text-sm text-gray-500"></span>
+      </div>
+    </div>
+
+    <!-- Structure -->
+    <div class="card p-6 step-panel hidden" data-step-panel="structure">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-semibold">Structure: Modules & Lessons</h2>
+        <div class="space-x-2">
+          <button class="btn-outline prev-step" data-prev="basic">← Back</button>
+          <button class="btn-outline next-step" data-next="content">Next: Content →</button>
+        </div>
+      </div>
+      <div class="mb-3"><button id="add-module" class="btn-primary text-sm">+ Add Module</button></div>
+      <div id="modules" class="space-y-3"></div>
+    </div>
+
+    <!-- Content -->
+    <div class="card p-6 step-panel hidden" data-step-panel="content">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-semibold">Content Editor</h2>
+        <div class="space-x-2">
+          <button class="btn-outline prev-step" data-prev="structure">← Back</button>
+          <button class="btn-outline next-step" data-next="assessments">Next: Assessments →</button>
+        </div>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="md:col-span-1">
+          <label class="block text-sm font-medium text-gray-700">Select Lesson</label>
+          <select id="content-lesson-picker" class="mt-1 w-full border rounded-md px-3 py-2"></select>
+        </div>
+        <div class="md:col-span-2 space-y-3">
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Content Type</label>
+            <select id="content-type" class="mt-1 w-full border rounded-md px-3 py-2">
+              <option value="text">Text</option>
+              <option value="video">Video</option>
+              <option value="slides">Slides</option>
+              <option value="code">Code</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Duration (minutes)</label>
+            <input id="content-duration" type="number" min="0" class="mt-1 w-full border rounded-md px-3 py-2" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Notes</label>
+            <textarea id="content-notes" rows="4" class="mt-1 w-full border rounded-md px-3 py-2" placeholder="Outline, links, resources..."></textarea>
+          </div>
+          <div>
+            <button id="content-save" class="btn-primary text-sm">Save Content</button>
+            <span id="content-status" class="text-sm text-gray-500 ml-2"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Assessments -->
+    <div class="card p-6 step-panel hidden" data-step-panel="assessments">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-semibold">Assessments (Quiz Builder)</h2>
+        <div class="space-x-2">
+          <button class="btn-outline prev-step" data-prev="content">← Back</button>
+          <button class="btn-outline next-step" data-next="pricing">Next: Pricing →</button>
+        </div>
+      </div>
+      <div class="mb-3">
+        <button id="add-quiz" class="btn-primary text-sm">+ Add Quiz</button>
+      </div>
+      <div id="quizzes" class="space-y-3"></div>
+    </div>
+
+    <!-- Pricing & Access -->
+    <div class="card p-6 step-panel hidden" data-step-panel="pricing">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-semibold">Pricing & Access</h2>
+        <div class="space-x-2">
+          <button class="btn-outline prev-step" data-prev="assessments">← Back</button>
+          <button class="btn-outline next-step" data-next="schedule">Next: Schedule →</button>
+        </div>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Access Mode</label>
+          <select id="access-mode" class="mt-1 w-full border rounded-md px-3 py-2">
+            <option value="open">Open</option>
+            <option value="invite">Invite Only</option>
+            <option value="approval">Approval Required</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Enrollment Cap (0 = unlimited)</label>
+          <input id="access-cap" type="number" min="0" class="mt-1 w-full border rounded-md px-3 py-2" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Enable Waitlist</label>
+          <select id="access-waitlist" class="mt-1 w-full border rounded-md px-3 py-2">
+            <option value="no">No</option>
+            <option value="yes">Yes</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Price (0 = Free)</label>
+          <input id="pricing-price" type="number" min="0" step="0.01" class="mt-1 w-full border rounded-md px-3 py-2" />
+        </div>
+        <div class="md:col-span-2">
+          <label class="block text-sm font-medium text-gray-700">Coupon Code (optional)</label>
+          <input id="pricing-coupon" class="mt-1 w-full border rounded-md px-3 py-2" placeholder="WELCOME10" />
+        </div>
+      </div>
+      <div class="mt-4">
+        <button id="pricing-save" class="btn-primary text-sm">Save Pricing & Access</button>
+        <span id="pricing-status" class="text-sm text-gray-500 ml-2"></span>
+      </div>
+    </div>
+
+    <!-- Schedule & Release -->
+    <div class="card p-6 step-panel hidden" data-step-panel="schedule">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-semibold">Schedule & Release</h2>
+        <div class="space-x-2">
+          <button class="btn-outline prev-step" data-prev="pricing">← Back</button>
+          <button class="btn-outline next-step" data-next="extras">Next: Extras →</button>
+        </div>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Release Mode</label>
+          <select id="sched-mode" class="mt-1 w-full border rounded-md px-3 py-2">
+            <option value="immediate">Immediate</option>
+            <option value="drip">Drip</option>
+            <option value="cohort">Cohort</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Start Date/Time (ISO)</label>
+          <input id="sched-start" class="mt-1 w-full border rounded-md px-3 py-2" placeholder="2025-10-01T09:00:00" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Timezone</label>
+          <input id="sched-tz" class="mt-1 w-full border rounded-md px-3 py-2" placeholder="UTC" />
+        </div>
+        <div class="md:col-span-3">
+          <label class="block text-sm font-medium text-gray-700">Drip Interval (e.g., 7d, 1w2d)</label>
+          <input id="sched-drip" class="mt-1 w-full border rounded-md px-3 py-2" placeholder="7d" />
+        </div>
+      </div>
+      <div class="mt-4">
+        <button id="schedule-save" class="btn-primary text-sm">Save Schedule</button>
+        <span id="schedule-status" class="text-sm text-gray-500 ml-2"></span>
+      </div>
+    </div>
+
+    <!-- Extras & SEO -->
+    <div class="card p-6 step-panel hidden" data-step-panel="extras">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-semibold">Extras & SEO</h2>
+        <div class="space-x-2">
+          <button class="btn-outline prev-step" data-prev="schedule">← Back</button>
+          <button class="btn-outline next-step" data-next="preview">Next: Preview →</button>
+        </div>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Certificate Enabled</label>
+          <select id="extras-cert" class="mt-1 w-full border rounded-md px-3 py-2">
+            <option value="no">No</option>
+            <option value="yes">Yes</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Certificate Template</label>
+          <input id="extras-cert-template" class="mt-1 w-full border rounded-md px-3 py-2" placeholder="default" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700">SEO Title</label>
+          <input id="seo-title" class="mt-1 w-full border rounded-md px-3 py-2" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700">SEO Description</label>
+          <input id="seo-desc" class="mt-1 w-full border rounded-md px-3 py-2" />
+        </div>
+        <div class="md:col-span-2">
+          <label class="block text-sm font-medium text-gray-700">SEO Keywords (comma-separated)</label>
+          <input id="seo-keywords" class="mt-1 w-full border rounded-md px-3 py-2" />
+        </div>
+      </div>
+      <div class="mt-4">
+        <button id="extras-save" class="btn-primary text-sm">Save Extras</button>
+        <span id="extras-status" class="text-sm text-gray-500 ml-2"></span>
+      </div>
+    </div>
+
+    <!-- Preview -->
+    <div class="card p-6 step-panel hidden" data-step-panel="preview">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-semibold">Preview</h2>
+        <div class="space-x-2">
+          <button class="btn-outline prev-step" data-prev="extras">← Back</button>
+        </div>
+      </div>
+      <div id="preview-pane" class="prose max-w-none"></div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function(){
+  // styles
+  const chips = document.createElement('style');
+  chips.textContent = `.step-chip{padding:.25rem .75rem;border-radius:9999px;background:#e5e7eb} .step-chip.active{background:#4f46e5;color:white} .hidden{display:none}`;
+  document.head.appendChild(chips);
+
+  function getCsrf(){
+    const m = document.cookie.match('(?:^|; )csrftoken=([^;]*)');
+    return m ? decodeURIComponent(m[1]) : '';
+  }
+  const root = document.getElementById('wizard');
+  const draftId = root?.dataset?.draftId;
+  const btnSave = document.getElementById('btn-save');
+  const btnPublish = document.getElementById('btn-publish');
+  const statusEl = document.getElementById('save-status');
+  if(!draftId) return;
+
+  // ---------- BASIC AUTOSAVE ----------
+  async function autosaveBasic(){
+    const payload = {
+      step: 'basic',
+      data: {
+        title: document.getElementById('title').value.trim(),
+        subtitle: document.getElementById('subtitle').value.trim(),
+        short_description: document.getElementById('short_description').value.trim(),
+        long_description: document.getElementById('long_description').value.trim(),
+        department: document.getElementById('department').value || null,
+        specialization: document.getElementById('specialization').value || null,
+        subspecialization: document.getElementById('subspecialization').value || null,
+      }
+    };
+    try{
+      const autosaveUrl = '{% url "courses:wizard_autosave" draft.id %}'.replace('{{ draft.id }}', draftId);
+      const res = await fetch(autosaveUrl, {
+        method:'POST',
+        headers:{ 'Content-Type':'application/json', 'X-CSRFToken': getCsrf() },
+        body: JSON.stringify(payload)
+      });
+      if(res.ok){ statusEl.textContent = 'Saved'; setTimeout(()=> statusEl.textContent='', 1500); }
+      else { statusEl.textContent = 'Save failed'; }
+    }catch(e){ statusEl.textContent = 'Network error'; }
+  }
+
+  btnSave?.addEventListener('click', function(){ autosaveBasic(); });
+  ['title','subtitle','short_description','long_description','department','specialization','subspecialization']
+    .forEach(id => { const el = document.getElementById(id); el && el.addEventListener('change', autosaveBasic); el && el.addEventListener('blur', autosaveBasic); });
+
+  btnPublish?.addEventListener('click', async function(){
+    try{
+      // final autosave before publish
+      await autosaveBasic();
+      const publishUrl = '{% url "courses:wizard_publish" draft.id %}'.replace('{{ draft.id }}', draftId);
+      window.location = publishUrl;
+    }catch(e){ alert('Unable to publish right now.'); }
+  });
+
+  // ---------- STEP NAV ----------
+  const stepChips = Array.from(document.querySelectorAll('.step-chip'));
+  const stepPanels = Array.from(document.querySelectorAll('.step-panel'));
+  const stepOrder = ['basic','structure','content','assessments','pricing','schedule','extras','preview'];
+  const crumb = document.getElementById('crumb-step');
+  const stepTitle = {
+    basic: 'Basic',
+    structure: 'Structure',
+    content: 'Content',
+    assessments: 'Assessments',
+    pricing: 'Pricing',
+    schedule: 'Schedule',
+    extras: 'Extras',
+    preview: 'Preview'
+  };
+  function gotoStep(step){
+    stepChips.forEach(c => c.classList.toggle('active', c.dataset.step===step));
+    stepPanels.forEach(p => p.classList.toggle('hidden', p.dataset.stepPanel!==step));
+    // Update breadcrumb
+    if(crumb) { crumb.textContent = 'Step: ' + (stepTitle[step] || step); }
+    // Auto scroll to top for better UX
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  document.addEventListener('click', (e)=>{
+    const t = e.target;
+    if(t.matches('.step-chip')){ gotoStep(t.dataset.step); }
+    if(t.matches('.next-step')){ gotoStep(t.dataset.next); }
+    if(t.matches('.prev-step')){ gotoStep(t.dataset.prev); }
+  });
+
+  // Keyboard shortcuts: Alt+Right => next, Alt+Left => prev
+  document.addEventListener('keydown', (e)=>{
+    if(!e.altKey) return;
+    const active = stepChips.find(c => c.classList.contains('active'));
+    const current = active ? active.dataset.step : 'basic';
+    const idx = stepOrder.indexOf(current);
+    if(e.key === 'ArrowRight' && idx >= 0 && idx < stepOrder.length - 1){
+      e.preventDefault();
+      gotoStep(stepOrder[idx+1]);
+    }
+    if(e.key === 'ArrowLeft' && idx > 0){
+      e.preventDefault();
+      gotoStep(stepOrder[idx-1]);
+    }
+  });
+
+  // ---------- STRUCTURE BUILDER ----------
+  const modulesEl = document.getElementById('modules');
+  const addModuleBtn = document.getElementById('add-module');
+  let structure = { modules: [] };
+  const uid = ()=> Math.random().toString(36).slice(2,9);
+
+  function renderStructure(){
+    modulesEl.innerHTML = '';
+    structure.modules.forEach((m, mi)=>{
+      const wrap = document.createElement('div');
+      wrap.className = 'border rounded-md p-3 bg-white';
+      wrap.innerHTML = `
+        <div class="flex items-center justify-between mb-2">
+          <div class="font-medium">Module ${mi+1}</div>
+          <div class="space-x-1">
+            <button class="text-xs btn-outline" data-act="mu" data-mi="${mi}">↑</button>
+            <button class="text-xs btn-outline" data-act="md" data-mi="${mi}">↓</button>
+            <button class="text-xs btn-outline" data-act="mx" data-mi="${mi}">Delete</button>
+          </div>
+        </div>
+        <input class="w-full border rounded px-2 py-1 mb-2" data-bind="mtitle" data-mi="${mi}" value="${m.title||''}" placeholder="Module title" />
+        <textarea class="w-full border rounded px-2 py-1 mb-3" rows="2" data-bind="mdesc" data-mi="${mi}" placeholder="Module description">${m.description||''}</textarea>
+        <div class="mb-2 flex items-center justify-between">
+          <div class="text-sm text-gray-600">Lessons</div>
+          <button class="text-xs btn-primary" data-act="la" data-mi="${mi}">+ Add Lesson</button>
+        </div>
+        <div class="space-y-2" data-lessons="${mi}">
+          ${m.lessons.map((l, li)=>`
+            <div class="flex items-center gap-2">
+              <span class="text-xs text-gray-500 w-14">L${li+1}</span>
+              <input class="flex-1 border rounded px-2 py-1" data-bind="ltitle" data-mi="${mi}" data-li="${li}" value="${l.title||''}" placeholder="Lesson title" />
+              <input type="number" min="0" class="w-24 border rounded px-2 py-1" data-bind="ldur" data-mi="${mi}" data-li="${li}" value="${l.duration||''}" placeholder="min" />
+              <button class="text-xs btn-outline" data-act="lu" data-mi="${mi}" data-li="${li}">↑</button>
+              <button class="text-xs btn-outline" data-act="ld" data-mi="${mi}" data-li="${li}">↓</button>
+              <button class="text-xs btn-outline" data-act="lx" data-mi="${mi}" data-li="${li}">Delete</button>
+            </div>
+          `).join('')}
+        </div>
+      `;
+      modulesEl.appendChild(wrap);
+    });
+    rebuildLessonPicker();
+    autosaveStructure();
+  }
+
+  function autosaveStructure(){
+    fetch('{% url "courses:wizard_autosave" draft.id %}'.replace('{{ draft.id }}', draftId),{
+      method:'POST',
+      headers:{'Content-Type':'application/json','X-CSRFToken':getCsrf()},
+      body: JSON.stringify({step:'structure', data: structure})
+    });
+  }
+
+  addModuleBtn?.addEventListener('click', ()=>{
+    structure.modules.push({id: uid(), title:'', description:'', lessons: []});
+    renderStructure();
+  });
+
+  modulesEl?.addEventListener('click', (e)=>{
+    const t = e.target;
+    const act = t.getAttribute('data-act');
+    if(!act) return;
+    const mi = parseInt(t.getAttribute('data-mi'));
+    const li = t.hasAttribute('data-li') ? parseInt(t.getAttribute('data-li')) : null;
+    if(act==='mx'){ structure.modules.splice(mi,1); }
+    if(act==='mu' && mi>0){ const [m]=structure.modules.splice(mi,1); structure.modules.splice(mi-1,0,m); }
+    if(act==='md' && mi<structure.modules.length-1){ const [m]=structure.modules.splice(mi,1); structure.modules.splice(mi+1,0,m); }
+    if(act==='la'){ structure.modules[mi].lessons.push({id: uid(), title:'', duration:''}); }
+    if(li!==null){
+      if(act==='lx'){ structure.modules[mi].lessons.splice(li,1); }
+      if(act==='lu' && li>0){ const [l]=structure.modules[mi].lessons.splice(li,1); structure.modules[mi].lessons.splice(li-1,0,l); }
+      if(act==='ld' && li<structure.modules[mi].lessons.length-1){ const [l]=structure.modules[mi].lessons.splice(li,1); structure.modules[mi].lessons.splice(li+1,0,l); }
+    }
+    renderStructure();
+  });
+
+  modulesEl?.addEventListener('input',(e)=>{
+    const t = e.target;
+    const bind = t.getAttribute('data-bind');
+    if(!bind) return;
+    const mi = parseInt(t.getAttribute('data-mi'));
+    if(bind==='mtitle') structure.modules[mi].title = t.value;
+    if(bind==='mdesc') structure.modules[mi].description = t.value;
+    if(bind==='ltitle'){ const li = parseInt(t.getAttribute('data-li')); structure.modules[mi].lessons[li].title = t.value; }
+    if(bind==='ldur'){ const li = parseInt(t.getAttribute('data-li')); structure.modules[mi].lessons[li].duration = t.value; }
+    autosaveStructure();
+    rebuildLessonPicker();
+  });
+
+  // ---------- CONTENT EDITOR ----------
+  const picker = document.getElementById('content-lesson-picker');
+  const cType = document.getElementById('content-type');
+  const cDur = document.getElementById('content-duration');
+  const cNotes = document.getElementById('content-notes');
+  const cSave = document.getElementById('content-save');
+  const cStatus = document.getElementById('content-status');
+  let contentMap = { lessons: {} };
+
+  function rebuildLessonPicker(){
+    if(!picker) return;
+    const flat = [];
+    structure.modules.forEach((m, mi)=>{
+      m.lessons.forEach((l, li)=> flat.push({ id:l.id, label:`M${mi+1} • L${li+1} — ${l.title||'Untitled'}` }));
+    });
+    picker.innerHTML = flat.map(f=>`<option value="${f.id}">${f.label}</option>`).join('');
+  }
+
+  function loadContentForm(){
+    const lid = picker.value; if(!lid) return;
+    const data = contentMap.lessons[lid] || {type:'text', duration:'', notes:''};
+    cType.value = data.type || 'text';
+    cDur.value = data.duration || '';
+    cNotes.value = data.notes || '';
+  }
+
+  async function autosaveContent(){
+    const lid = picker.value; if(!lid) return;
+    contentMap.lessons[lid] = { type: cType.value, duration: cDur.value, notes: cNotes.value };
+    try{
+      const res = await fetch('{% url "courses:wizard_autosave" draft.id %}'.replace('{{ draft.id }}', draftId),{
+        method:'POST', headers:{'Content-Type':'application/json','X-CSRFToken':getCsrf()},
+        body: JSON.stringify({ step:'content', data: contentMap })
+      });
+      if(res.ok){ cStatus.textContent='Saved'; setTimeout(()=> cStatus.textContent='', 1500); }
+      else { cStatus.textContent='Save failed'; }
+    }catch(e){ cStatus.textContent='Network error'; }
+  }
+
+  picker?.addEventListener('change', loadContentForm);
+  cSave?.addEventListener('click', autosaveContent);
+
+  // ---------- ASSESSMENTS (QUIZ BUILDER) ----------
+  const quizzesEl = document.getElementById('quizzes');
+  const addQuizBtn = document.getElementById('add-quiz');
+  let assessments = { quizzes: [] };
+  function renderQuizzes(){
+    quizzesEl.innerHTML = '';
+    assessments.quizzes.forEach((q, qi)=>{
+      const div = document.createElement('div');
+      div.className = 'border rounded-md p-3 bg-white';
+      div.innerHTML = `
+        <div class="flex items-center justify-between mb-2">
+          <div class="font-medium">Quiz ${qi+1}</div>
+          <div class="space-x-1">
+            <button class="text-xs btn-outline" data-qact="qx" data-qi="${qi}">Delete</button>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-2 mb-2">
+          <input class="border rounded px-2 py-1" data-qbind="title" data-qi="${qi}" value="${q.title||''}" placeholder="Quiz title" />
+          <select class="border rounded px-2 py-1" data-qbind="scope" data-qi="${qi}">
+            <option value="course" ${q.scope==='course'?'selected':''}>Course</option>
+            <option value="module" ${q.scope==='module'?'selected':''}>Module</option>
+            <option value="lesson" ${q.scope==='lesson'?'selected':''}>Lesson</option>
+          </select>
+          <input class="border rounded px-2 py-1" data-qbind="refId" data-qi="${qi}" value="${q.refId||''}" placeholder="Ref ID (optional)" />
+        </div>
+        <div class="grid grid-cols-3 gap-2 mb-2">
+          <input type="number" min="1" class="border rounded px-2 py-1" data-qbind="attempts" data-qi="${qi}" value="${q.settings?.attempts||1}" placeholder="Attempts" />
+          <input type="number" min="0" class="border rounded px-2 py-1" data-qbind="timeLimit" data-qi="${qi}" value="${q.settings?.timeLimit||0}" placeholder="Time limit (min)" />
+          <input type="number" min="0" max="100" class="border rounded px-2 py-1" data-qbind="passing" data-qi="${qi}" value="${q.settings?.passingPercent||70}" placeholder="Passing %" />
+        </div>
+        <div>
+          <button class="text-xs btn-primary" data-qact="qa" data-qi="${qi}">+ Add Question</button>
+        </div>
+        <div class="mt-2 space-y-2">
+          ${(q.questions||[]).map((qq, qqi)=>`
+            <div class="border rounded px-2 py-2">
+              <div class="flex items-center justify-between mb-1">
+                <span class="text-sm text-gray-600">Question ${qqi+1}</span>
+                <button class="text-xs btn-outline" data-qact="qrx" data-qi="${qi}" data-qqi="${qqi}">Delete</button>
+              </div>
+              <input class="w-full border rounded px-2 py-1 mb-2" data-qbind="prompt" data-qi="${qi}" data-qqi="${qqi}" value="${qq.prompt||''}" placeholder="Prompt" />
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                <input class="border rounded px-2 py-1" data-qbind="c1" data-qi="${qi}" data-qqi="${qqi}" value="${qq.choices?.[0]||''}" placeholder="Choice 1" />
+                <input class="border rounded px-2 py-1" data-qbind="c2" data-qi="${qi}" data-qqi="${qqi}" value="${qq.choices?.[1]||''}" placeholder="Choice 2" />
+                <input class="border rounded px-2 py-1" data-qbind="c3" data-qi="${qi}" data-qqi="${qqi}" value="${qq.choices?.[2]||''}" placeholder="Choice 3" />
+                <input class="border rounded px-2 py-1" data-qbind="c4" data-qi="${qi}" data-qqi="${qqi}" value="${qq.choices?.[3]||''}" placeholder="Choice 4" />
+              </div>
+              <input class="w-full border rounded px-2 py-1 mt-2" data-qbind="answer" data-qi="${qi}" data-qqi="${qqi}" value="${qq.answer||''}" placeholder="Answer (exact text)" />
+            </div>
+          `).join('')}
+        </div>
+      `;
+      quizzesEl.appendChild(div);
+    });
+    autosaveAssessments();
+  }
+  addQuizBtn?.addEventListener('click', ()=>{
+    assessments.quizzes.push({ title:'', scope:'course', refId:'', settings:{ attempts:1, timeLimit:0, passingPercent:70 }, questions:[] });
+    renderQuizzes();
+  });
+  quizzesEl?.addEventListener('click', (e)=>{
+    const t = e.target; const act = t.getAttribute('data-qact'); if(!act) return;
+    const qi = parseInt(t.getAttribute('data-qi'));
+    if(act==='qx'){ assessments.quizzes.splice(qi,1); }
+    if(act==='qa'){ assessments.quizzes[qi].questions = assessments.quizzes[qi].questions||[]; assessments.quizzes[qi].questions.push({prompt:'',choices:['','','',''],answer:''}); }
+    if(act==='qrx'){ const qqi=parseInt(t.getAttribute('data-qqi')); assessments.quizzes[qi].questions.splice(qqi,1); }
+    renderQuizzes();
+  });
+  quizzesEl?.addEventListener('input', (e)=>{
+    const t = e.target; const bind=t.getAttribute('data-qbind'); if(!bind) return;
+    const qi = parseInt(t.getAttribute('data-qi'));
+    if(['title','scope','refId'].includes(bind)) assessments.quizzes[qi][bind] = t.value;
+    if(['attempts','timeLimit','passing'].includes(bind)){
+      const s = assessments.quizzes[qi].settings || (assessments.quizzes[qi].settings={});
+      if(bind==='attempts') s.attempts = parseInt(t.value||'1');
+      if(bind==='timeLimit') s.timeLimit = parseInt(t.value||'0');
+      if(bind==='passing') s.passingPercent = parseInt(t.value||'70');
+    }
+    if(['prompt','c1','c2','c3','c4','answer'].includes(bind)){
+      const qqi = parseInt(t.getAttribute('data-qqi'));
+      const qq = (assessments.quizzes[qi].questions || [])[qqi];
+      if(!qq) return;
+      if(bind==='prompt') qq.prompt = t.value;
+      if(bind==='answer') qq.answer = t.value;
+      if(bind==='c1') (qq.choices||(qq.choices=['','','','']))[0]=t.value;
+      if(bind==='c2') (qq.choices||(qq.choices=['','','','']))[1]=t.value;
+      if(bind==='c3') (qq.choices||(qq.choices=['','','','']))[2]=t.value;
+      if(bind==='c4') (qq.choices||(qq.choices=['','','','']))[3]=t.value;
+    }
+    autosaveAssessments();
+  });
+  async function autosaveAssessments(){
+    fetch('{% url "courses:wizard_autosave" draft.id %}'.replace('{{ draft.id }}', draftId),{
+      method:'POST', headers:{'Content-Type':'application/json','X-CSRFToken':getCsrf()},
+      body: JSON.stringify({ step:'assessments', data: assessments })
+    });
+  }
+
+  // ---------- PRICING & ACCESS ----------
+  const aMode = document.getElementById('access-mode');
+  const aCap = document.getElementById('access-cap');
+  const aWait = document.getElementById('access-waitlist');
+  const pPrice = document.getElementById('pricing-price');
+  const pCoupon = document.getElementById('pricing-coupon');
+  const pSave = document.getElementById('pricing-save');
+  const pStatus = document.getElementById('pricing-status');
+  async function autosavePricing(){
+    const payload = { step:'pricing', data: { price: pPrice.value, coupon: pCoupon.value } };
+    const res = await fetch('{% url "courses:wizard_autosave" draft.id %}'.replace('{{ draft.id }}', draftId),{
+      method:'POST', headers:{'Content-Type':'application/json','X-CSRFToken':getCsrf()}, body: JSON.stringify(payload)
+    });
+    pStatus.textContent = res.ok ? 'Saved' : 'Save failed'; if(res.ok) setTimeout(()=>pStatus.textContent='',1500);
+  }
+  async function autosaveAccess(){
+    const payload = { step:'access', data: { mode: aMode.value, cap: aCap.value, waitlist: aWait.value==='yes' } };
+    await fetch('{% url "courses:wizard_autosave" draft.id %}'.replace('{{ draft.id }}', draftId),{
+      method:'POST', headers:{'Content-Type':'application/json','X-CSRFToken':getCsrf()}, body: JSON.stringify(payload)
+    });
+  }
+  pSave?.addEventListener('click', autosavePricing);
+  ;[aMode,aCap,aWait].forEach(el=> el && el.addEventListener('change', autosaveAccess));
+
+  // ---------- SCHEDULE ----------
+  const sMode = document.getElementById('sched-mode');
+  const sStart = document.getElementById('sched-start');
+  const sTz = document.getElementById('sched-tz');
+  const sDrip = document.getElementById('sched-drip');
+  const sSave = document.getElementById('schedule-save');
+  const sStatus = document.getElementById('schedule-status');
+  async function autosaveSchedule(){
+    const payload = { step:'schedule', data: { mode: sMode.value, start: sStart.value, timezone: sTz.value, drip: sDrip.value } };
+    const res = await fetch('{% url "courses:wizard_autosave" draft.id %}'.replace('{{ draft.id }}', draftId),{
+      method:'POST', headers:{'Content-Type':'application/json','X-CSRFToken':getCsrf()}, body: JSON.stringify(payload)
+    });
+    sStatus.textContent = res.ok ? 'Saved' : 'Save failed'; if(res.ok) setTimeout(()=>sStatus.textContent='',1500);
+  }
+  sSave?.addEventListener('click', autosaveSchedule);
+  ;[sMode,sStart,sTz,sDrip].forEach(el=> el && el.addEventListener('blur', autosaveSchedule));
+
+  // ---------- EXTRAS ----------
+  const eCert = document.getElementById('extras-cert');
+  const eCertTpl = document.getElementById('extras-cert-template');
+  const eSeoTitle = document.getElementById('seo-title');
+  const eSeoDesc = document.getElementById('seo-desc');
+  const eSeoKw = document.getElementById('seo-keywords');
+  const eSave = document.getElementById('extras-save');
+  const eStatus = document.getElementById('extras-status');
+  async function autosaveExtras(){
+    const payload = { step:'extras', data: { certificate: eCert.value==='yes', cert_template: eCertTpl.value, seo:{ title:eSeoTitle.value, description:eSeoDesc.value, keywords:eSeoKw.value } } };
+    const res = await fetch('{% url "courses:wizard_autosave" draft.id %}'.replace('{{ draft.id }}', draftId),{
+      method:'POST', headers:{'Content-Type':'application/json','X-CSRFToken':getCsrf()}, body: JSON.stringify(payload)
+    });
+    eStatus.textContent = res.ok ? 'Saved' : 'Save failed'; if(res.ok) setTimeout(()=>eStatus.textContent='',1500);
+  }
+  eSave?.addEventListener('click', autosaveExtras);
+
+  // ---------- PREVIEW ----------
+  const previewPane = document.getElementById('preview-pane');
+  function buildPreview(){
+    const title = document.getElementById('title').value.trim();
+    const subtitle = document.getElementById('subtitle').value.trim();
+    const deptSel = document.getElementById('department');
+    const specSel = document.getElementById('specialization');
+    const subspecSel = document.getElementById('subspecialization');
+    const deptText = deptSel.options[deptSel.selectedIndex]?.text || '';
+    const specText = specSel.options[specSel.selectedIndex]?.text || '';
+    const subspecText = subspecSel.options[subspecSel.selectedIndex]?.text || '';
+    const longDesc = document.getElementById('long_description').value.trim();
+    function esc(s){return (s||'').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+    const modHtml = structure.modules.map((m,mi)=>{
+      const lessons = m.lessons.map((l,li)=>`<li>Lesson ${li+1}: ${esc(l.title)} (${esc(l.duration)} min)</li>`).join('');
+      return `<li><strong>Module ${mi+1}: ${esc(m.title)}</strong><ul>${lessons}</ul></li>`;
+    }).join('');
+    previewPane.innerHTML = `
+      <div>
+        <h3 class="text-xl font-semibold">${esc(title)}</h3>
+        <p class="text-gray-600 mb-2">${esc(subtitle)}</p>
+        <div class="text-sm text-gray-500 mb-4">${esc(deptText)} • ${esc(specText)} ${subspecText?('• '+esc(subspecText)):''}</div>
+        <p class="mb-4">${esc(longDesc)}</p>
+        <h4 class="font-semibold mb-1">Curriculum</h4>
+        <ol class="list-decimal ml-5 space-y-1">${modHtml||'<li>No modules yet</li>'}</ol>
+      </div>`;
+  }
+  document.addEventListener('click', (e)=>{
+    const t = e.target; if(t.matches('.step-chip') && t.dataset.step==='preview') buildPreview();
+    if(t.matches('.next-step') && t.dataset.next==='preview') buildPreview();
+  });
+
+  // initial
+  gotoStep('basic');
+})();
+</script>
+{% endblock %}

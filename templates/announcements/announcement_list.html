@@ -1,0 +1,289 @@
+{% extends 'base.html' %}
+
+{% block title %}Announcements | EduVanta{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Filter chip selection
+        const filterChips = document.querySelectorAll('.filter-chip');
+        
+        filterChips.forEach(chip => {
+            chip.addEventListener('click', function() {
+                // Deactivate all chips
+                filterChips.forEach(c => {
+                    c.classList.remove('active');
+                    c.classList.add('bg-gray-100');
+                    c.classList.add('text-gray-800');
+                });
+                
+                // Activate this chip
+                this.classList.add('active');
+                this.classList.remove('bg-gray-100');
+                this.classList.remove('text-gray-800');
+                
+                // Filter announcements based on category
+                const category = this.dataset.category || this.textContent.trim();
+                console.log('Filter by:', category);
+                // In a real implementation, this would filter the announcements or redirect to a filtered URL
+            });
+        });
+        
+        // Search functionality
+        const searchInput = document.getElementById('search');
+        if (searchInput) {
+            searchInput.addEventListener('input', function(e) {
+                console.log('Searching for:', this.value);
+                // In a real implementation, this would perform a search as you type
+            });
+        }
+        
+        // Announcement card hover animation
+        const announcementCards = document.querySelectorAll('.announcement-card');
+        announcementCards.forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-5px)';
+                this.style.boxShadow = '0 15px 30px rgba(99, 102, 241, 0.1)';
+            });
+            
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0)';
+                this.style.boxShadow = '';
+            });
+        });
+    });
+</script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Announcement Card Animation */
+    .announcement-card {
+        transition: all 0.3s ease;
+        transform: translateY(0);
+    }
+    
+    .announcement-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 30px rgba(99, 102, 241, 0.1);
+    }
+    
+    /* Badge Animation */
+    .badge-pulse {
+        animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+        0% {
+            box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+        }
+        70% {
+            box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+        }
+        100% {
+            box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+        }
+    }
+    
+    /* Filter Chip Animation */
+    .filter-chip {
+        transition: all 0.2s ease;
+    }
+    
+    .filter-chip:hover {
+        transform: scale(1.05);
+    }
+    
+    .filter-chip.active {
+        background: linear-gradient(to right, #6366F1, #06B6D4);
+        color: white;
+        box-shadow: 0 2px 10px rgba(99, 102, 241, 0.3);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Hero Banner -->
+    <div class="bg-gradient-to-r from-indigo-600 to-cyan-500 rounded-xl overflow-hidden shadow-lg mb-8">
+        <div class="p-6 md:p-8 text-white">
+            <h1 class="text-3xl font-bold mb-2">Announcements</h1>
+            <p class="text-lg opacity-90 mb-4">Stay updated with the latest news and information</p>
+            {% if can_manage %}
+            <a href="{% url 'announcements:create_announcement' %}" 
+               class="inline-flex items-center px-4 py-2 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-lg text-sm font-medium transition-all duration-300">
+                <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                New Announcement
+            </a>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Header Section -->
+    <div class="mb-6">
+        <div class="flex items-baseline justify-between">
+            <div>
+                <h2 class="text-2xl font-bold text-gray-900">Latest Updates</h2>
+                <p class="text-gray-600">Browse all announcements from newest to oldest</p>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="mb-6">
+            <div class="flex gap-2 mb-4 overflow-x-auto pb-2 hide-scrollbar">
+                <button class="filter-chip active px-4 py-2 rounded-full text-sm font-medium">All</button>
+                {% for category in categories %}
+                <button class="filter-chip bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-full text-sm font-medium text-gray-800" data-category="{{ category.id }}">{{ category.name }}</button>
+                {% empty %}
+                <button class="filter-chip bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-full text-sm font-medium text-gray-800">Academic</button>
+                <button class="filter-chip bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-full text-sm font-medium text-gray-800">Events</button>
+                <button class="filter-chip bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-full text-sm font-medium text-gray-800">Important</button>
+                <button class="filter-chip bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-full text-sm font-medium text-gray-800">Updates</button>
+                {% endfor %}
+            </div>
+            
+            <!-- Search -->
+            <div class="relative w-full md:w-96">
+                <input type="text" id="search" placeholder="Search announcements..." class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- Announcements Grid (main + sidebar) -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+            <!-- Main list -->
+            <div class="lg:col-span-2 space-y-6">
+            {% for announcement in announcements %}
+            <!-- Announcement Card -->
+            <div class="announcement-card bg-white rounded-xl overflow-hidden shadow-md border border-gray-100">
+                <div class="p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="bg-indigo-100 text-indigo-800 text-xs px-2 py-1 rounded-full">
+                            {{ announcement.category.name|default:"General" }}
+                        </span>
+                        {% if announcement.is_important %}
+                        <span class="badge-pulse bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+                            Important
+                        </span>
+                        {% endif %}
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">{{ announcement.title }}</h3>
+                    <p class="text-sm text-gray-600 mb-4">{{ announcement.content|safe|truncatewords_html:30 }}</p>
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <img src="{{ announcement.author.profile_picture.url|default:'https://ui-avatars.com/api/?name='|add:announcement.author.username }}" 
+                                 alt="{{ announcement.author.username }}" 
+                                 class="w-6 h-6 rounded-full mr-2">
+                            <span class="text-xs text-gray-700">{{ announcement.author.get_full_name|default:announcement.author.username }}</span>
+                        </div>
+                        <span class="text-xs text-gray-500">{{ announcement.created_at|date:"F j, Y" }}</span>
+                    </div>
+                    
+                    {% if announcement.content|length > 300 or announcement.attachments.exists %}
+                    <div class="mt-4 flex justify-between items-center">
+                        <a href="{% url 'announcements:announcement_detail' announcement.id %}" 
+                           class="text-indigo-600 hover:text-indigo-800 text-sm font-medium">
+                            Read more →
+                        </a>
+                        
+                        {% if announcement.attachments.exists %}
+                        <div class="flex items-center">
+                            <svg class="h-4 w-4 text-gray-400 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path>
+                            </svg>
+                            <span class="text-xs text-gray-500">{{ announcement.attachments.count }} attachment{{ announcement.attachments.count|pluralize }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% empty %}
+            <!-- Empty State Message (main column) -->
+            <div class="text-center py-10 bg-white rounded-xl shadow-md">
+                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
+                </svg>
+                <h3 class="mt-2 text-base font-semibold text-gray-900">No announcements yet</h3>
+                <p class="mt-1 text-sm text-gray-500">When you create the first announcement it will show up here.</p>
+                {% if can_manage %}
+                <div class="mt-6">
+                    <a href="{% url 'announcements:create_announcement' %}" 
+                       class="inline-flex items-center px-5 py-2.5 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                        </svg>
+                        New Announcement
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+            </div>
+
+            {% if show_ai %}
+            {% endif %}
+
+        <!-- Pagination removed as requested -->
+        
+        <!-- AI Recommendations -->
+        <div class="mt-12 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-xl overflow-hidden shadow-lg p-6 text-white">
+            <div class="flex items-center mb-4">
+                <svg class="h-6 w-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                </svg>
+                <h2 class="text-xl font-bold">AI Recommendations</h2>
+            </div>
+            <p class="mb-4 opacity-90">Based on your interests and activity, you might find these announcements relevant:</p>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="bg-white/10 backdrop-blur-sm p-4 rounded-lg hover:bg-white/20 transition-all duration-300">
+                    <h3 class="font-medium text-white mb-1">New Data Science Course</h3>
+                    <p class="text-sm text-white/80">Explore our latest course on advanced data analysis techniques.</p>
+                </div>
+                <div class="bg-white/10 backdrop-blur-sm p-4 rounded-lg hover:bg-white/20 transition-all duration-300">
+                    <h3 class="font-medium text-white mb-1">Upcoming Hackathon</h3>
+                    <p class="text-sm text-white/80">Join our 48-hour coding challenge with amazing prizes.</p>
+                </div>
+                <div class="bg-white/10 backdrop-blur-sm p-4 rounded-lg hover:bg-white/20 transition-all duration-300">
+                    <h3 class="font-medium text-white mb-1">Scholarship Deadline</h3>
+                    <p class="text-sm text-white/80">Last chance to apply for the fall semester scholarship program.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Helpers to update query params without full reloads on every keystroke
+(function(){
+  const formDebounce = (fn, d=350)=>{ let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn.apply(null,a), d); } };
+  const navTo = (params)=>{
+    const url = new URL(window.location.href);
+    Object.entries(params).forEach(([k,v])=>{ if(v===null){ url.searchParams.delete(k); } else { url.searchParams.set(k, v); }});
+    window.location.href = url.toString();
+  };
+  // Search
+  const s = document.getElementById('search');
+  const initialSearch = "{{ search_term|default:''|escapejs }}";
+  if(s){ s.value = initialSearch; s.addEventListener('input', formDebounce(()=> navTo({search: s.value||null}))); }
+  // Filter chips
+  document.querySelectorAll('.filter-chip').forEach(chip=>{
+    chip.addEventListener('click', ()=>{
+      const category = chip.dataset.category || '';
+      navTo({category: category || null});
+    });
+    // Mark active if matches active_category
+    const active = '{{ active_category|default:"" }}';
+    if((chip.dataset.category||'') === active || (!chip.dataset.category && active==='')){
+      chip.classList.add('active');
+    }
+  });
+})();
+</script>
+{% endblock %}

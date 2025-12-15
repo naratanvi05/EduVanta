@@ -1,0 +1,820 @@
+{% extends 'base.html' %}
+{% block title %}Profile Setup - EduVanta{% endblock %}
+
+{% block content %}
+<div id="profile-setup-root" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10" data-role="{{ user.role }}">
+  <div class="grid grid-cols-1 md:grid-cols-5 gap-6">
+    <!-- Sidebar Guide (anchors) -->
+    <nav class="md:col-span-1 hidden md:block sticky top-6 self-start" aria-label="Profile setup navigation">
+      <div class="rounded-xl border border-gray-200 bg-white p-4">
+        <div class="text-xs font-semibold text-gray-500 mb-2">Setup Guide</div>
+        <ol class="space-y-2 text-sm">
+          <li><a class="text-indigo-600 hover:underline" href="#step-1" aria-label="Go to Personal Information">1. Personal</a></li>
+          <li><a class="text-indigo-600 hover:underline" href="#step-2" aria-label="Go to Program & Department">2. Program & Dept</a></li>
+          <li><a class="text-indigo-600 hover:underline" href="#step-3" aria-label="Go to Specialization">3. Specialization</a></li>
+          <li><a class="text-indigo-600 hover:underline" href="#step-4" aria-label="Go to Sub-specialization">4. Sub‑specialization</a></li>
+          <li><a class="text-indigo-600 hover:underline" href="#step-5" aria-label="Go to Courses & Parent Linking">5. Courses & Linking</a></li>
+        </ol>
+      </div>
+    </nav>
+
+    <!-- Main -->
+    <div class="md:col-span-4">
+      <div class="flex items-center justify-between mb-4">
+        <div class="text-xs text-gray-500">Complete your profile to personalize your dashboard. You can skip once and finish later.</div>
+        <div class="space-x-2">
+          <a href="{% url 'accounts:remind_later' %}" class="btn-outline text-sm" title="Skip once and go to dashboard">Skip for now</a>
+        </div>
+      </div>
+
+      <!-- Step 1: Personal -->
+      <section id="step-1" class="bg-white rounded-xl shadow p-6 mb-6" tabindex="-1" aria-labelledby="step-1-title">
+        <h2 id="step-1-title" class="text-2xl font-bold text-gray-800 mb-4">Personal Information</h2>
+        <form id="personal-info-form" method="post" enctype="multipart/form-data" onsubmit="return false;">
+          {% csrf_token %}
+          <input type="hidden" name="step" value="personal" />
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label for="first_name" class="block text-sm font-medium text-gray-700">First Name</label>
+              <input id="first_name" name="first_name" value="{{ user.first_name }}" class="w-full px-3 py-2 border rounded-lg" required />
+            </div>
+            <div>
+              <label for="last_name" class="block text-sm font-medium text-gray-700">Last Name</label>
+              <input id="last_name" name="last_name" value="{{ user.last_name }}" class="w-full px-3 py-2 border rounded-lg" />
+            </div>
+            <div class="sm:col-span-2">
+              <label for="bio" class="block text-sm font-medium text-gray-700">Bio</label>
+              <textarea id="bio" name="bio" rows="3" class="w-full px-3 py-2 border rounded-lg">{{ user.bio }}</textarea>
+            </div>
+          </div>
+          <div class="mt-4 flex justify-end">
+            <button type="button" class="btn-outline" onclick="psSave('personal-info-form')">Save</button>
+          </div>
+        </form>
+      </section>
+
+      <!-- Step 2: Program & Dept -->
+      <section id="step-2" class="bg-white rounded-xl shadow p-6 mb-6" tabindex="-1" aria-labelledby="step-2-title">
+        <h2 id="step-2-title" class="text-2xl font-bold text-gray-800 mb-2">Select Program</h2>
+        <!-- Selected filters pill bar -->
+        <div id="selected-pills" class="flex flex-wrap gap-2 mb-2" aria-live="polite"></div>
+        <!-- Controls: level filter + hide toggle -->
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-2" id="prog-level-tabs" role="tablist" aria-label="Program Level">
+            <button type="button" class="btn-outline text-xs level-tab ring-1 ring-indigo-200" data-level="all" aria-selected="true">All</button>
+            <button type="button" class="btn-outline text-xs level-tab" data-level="undergraduate">Undergraduate</button>
+            <button type="button" class="btn-outline text-xs level-tab" data-level="postgraduate">Postgraduate</button>
+            <button type="button" class="btn-outline text-xs level-tab" data-level="doctoral">Doctoral</button>
+          </div>
+          <div class="flex items-center gap-3">
+            <label class="flex items-center gap-2 text-xs text-gray-600">
+              <input type="checkbox" id="hide-toggle" class="rounded" checked /> Hide non-matching
+            </label>
+            <button type="button" id="btn-reset-program" class="btn-outline text-xs">Reset Program</button>
+          </div>
+        </div>
+
+        <!-- Recommended for you -->
+        <div class="mb-3 p-3 rounded-lg bg-indigo-50 border border-indigo-200">
+          <div class="text-sm font-semibold text-indigo-900">Recommended for You</div>
+          <div class="mt-2 flex flex-wrap gap-2">
+            <button type="button" class="btn-outline text-xs rec-prog" data-prog-name="b.tech">B.Tech</button>
+            <button type="button" class="btn-outline text-xs rec-dept" data-dept-code="CSE">CSE</button>
+            <button type="button" class="btn-outline text-xs rec-dept" data-dept-code="AI">AI</button>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3" role="list">
+          {% for p in programs %}
+          <div class="border rounded-lg p-3" role="listitem">
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="font-medium">{{ p.name }}</div>
+                <div class="text-xs text-gray-500">
+                  Dept: {{ p.department.code }}{% if p.level %} • {{ p.level }}{% endif %}
+                  <span class="ml-2 inline-flex items-center text-[11px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-700 border border-gray-200 prog-count" aria-label="Departments offering this program" title=""></span>
+                </div>
+              </div>
+              <button type="button" class="btn-outline text-xs prog-btn" data-program-id="{{ p.id }}" data-dept-id="{{ p.department_id }}" data-program-name="{{ p.name|lower }}" data-program-level="{{ p.level|default:'all'|lower }}">Select</button>
+            </div>
+          </div>
+          {% empty %}
+          <div class="text-sm text-gray-500">No programs available.</div>
+          {% endfor %}
+        </div>
+
+        <h3 class="text-xl font-semibold text-gray-800 mt-6 mb-2 flex items-center justify-between">Select Department <button type="button" id="btn-reset-dept" class="btn-outline text-xs">Reset Departments</button></h3>
+        <form id="dept-form" onsubmit="return false;">
+          {% csrf_token %}
+          <input type="hidden" name="step" value="department" />
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3" id="dept-list">
+            {% for d in departments %}
+            <label class="border rounded-lg p-3 flex items-center gap-3 cursor-pointer" data-dept-id="{{ d.id }}" data-dept-code="{{ d.code }}">
+              <input type="checkbox" name="ids" value="{{ d.id }}" class="rounded" />
+              <div>
+                <div class="font-medium">{{ d.name }}</div>
+                <div class="text-xs text-gray-500">{{ d.code }}</div>
+              </div>
+            </label>
+            {% endfor %}
+          </div>
+          <div class="mt-4 flex justify-end">
+            <button type="button" class="btn-outline" onclick="psSave('dept-form')">Save</button>
+          </div>
+        </form>
+      </section>
+
+      <!-- Step 3: Specialization -->
+      <section id="step-3" class="bg-white rounded-xl shadow p-6 mb-6" tabindex="-1" aria-labelledby="step-3-title">
+        <h2 id="step-3-title" class="text-2xl font-bold text-gray-800 mb-2 flex items-center justify-between">Choose Your Specialization <button type="button" id="btn-reset-spec" class="btn-outline text-xs">Reset Specializations</button></h2>
+        <div class="mb-3"><input id="spec-search" type="search" class="w-full md:w-80 px-3 py-2 border rounded-lg" placeholder="Search specializations..." /></div>
+        <form id="spec-form" onsubmit="return false;">
+          {% csrf_token %}
+          <input type="hidden" name="step" value="specialization" />
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3" id="spec-list">
+            {% for s in specializations %}
+            <label class="border rounded-lg p-3 flex items-center gap-3 cursor-pointer" data-dept-id="{{ s.department_id }}" data-name="{{ s.name|lower }}">
+              <input type="checkbox" name="ids" value="{{ s.id }}" class="rounded" />
+              <div>
+                <div class="font-medium">{{ s.name }}</div>
+                <div class="text-xs text-gray-500">Dept: {{ s.department.name }}</div>
+              </div>
+            </label>
+            {% endfor %}
+          </div>
+          <div class="mt-4 flex justify-end">
+            <button type="button" class="btn-outline" onclick="psSave('spec-form')">Save</button>
+          </div>
+        </form>
+      </section>
+
+      <!-- Step 4: Sub-specialization -->
+      <section id="step-4" class="bg-white rounded-xl shadow p-6 mb-6" tabindex="-1" aria-labelledby="step-4-title">
+        <h2 id="step-4-title" class="text-2xl font-bold text-gray-800 mb-2 flex items-center justify-between">Choose Your Sub‑specialization <button type="button" id="btn-reset-subspec" class="btn-outline text-xs">Reset Sub‑specializations</button></h2>
+        <div class="mb-3"><input id="subspec-search" type="search" class="w-full md:w-80 px-3 py-2 border rounded-lg" placeholder="Search sub‑specializations..." /></div>
+        <form id="subspec-form" onsubmit="return false;">
+          {% csrf_token %}
+          <input type="hidden" name="step" value="subspecialization" />
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3" id="subspec-list">
+            {% for ss in subspecializations %}
+            <label class="border rounded-lg p-3 flex items-center gap-3 cursor-pointer" data-spec-id="{{ ss.specialization_id }}" data-name="{{ ss.name|lower }}">
+              <input type="checkbox" name="ids" value="{{ ss.id }}" class="rounded" />
+              <div>
+                <div class="font-medium">{{ ss.name }}</div>
+                <div class="text-xs text-gray-500">Spec: {{ ss.specialization.name }}</div>
+              </div>
+            </label>
+            {% endfor %}
+          </div>
+          <div class="mt-4 flex justify-end">
+            <button type="button" class="btn-outline" onclick="psSave('subspec-form')">Save</button>
+          </div>
+        </form>
+      </section>
+
+      <!-- Step 5: Courses & Parent Linking -->
+      <section id="step-5" class="bg-white rounded-xl shadow p-6 mb-6" tabindex="-1" aria-labelledby="step-5-title">
+        <h2 id="step-5-title" class="text-2xl font-bold text-gray-800 mb-4">Select Courses</h2>
+        <div id="course-list" class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {% for c in courses %}
+          <label class="border rounded-lg p-3 flex items-center gap-3 cursor-pointer"
+                 data-dept-id="{{ c.department_id|default_if_none:'' }}"
+                 data-dept-code="{{ c.department.code }}"
+                 data-spec-id="{{ c.specialization_id|default_if_none:'' }}"
+                 data-subspec-id="{{ c.subspecialization_id|default_if_none:'' }}"
+                 data-tags="{% for t in c.tags.all %}{{ t.slug }}{% if not forloop.last %},{% endif %}{% endfor %}">
+            <input type="checkbox" name="course_ids" value="{{ c.id }}" class="rounded" />
+            <div>
+              <div class="font-medium">{{ c.title }}</div>
+              <div class="text-xs text-gray-500">{{ c.department.code }} / {{ c.specialization.name }}{% if c.subspecialization %} / {{ c.subspecialization.name }}{% endif %}</div>
+            </div>
+          </label>
+          {% empty %}
+          <div class="text-sm text-gray-500">No courses available.</div>
+          {% endfor %}
+        </div>
+
+        <!-- Featured Tracks -->
+        <div class="mt-6 p-4 rounded-lg border border-indigo-200 bg-indigo-50">
+          <h3 class="text-lg font-semibold text-indigo-900">Choose a Track</h3>
+          <p class="text-sm text-indigo-800 mb-3">Pick a curated track to auto-select recommended courses. You can adjust selections afterwards.</p>
+          <div class="flex flex-wrap gap-2" id="track-buttons">
+            <!-- Role-based order: AI and Data first for students -->
+            <button type="button" class="btn-outline text-sm" data-track="ai" data-tags="ai,featured">AI</button>
+            <button type="button" class="btn-outline text-sm" data-track="data" data-tags="data-science,popular">Data Science</button>
+            <button type="button" class="btn-outline text-sm" data-track="fullstack" data-tags="fullstack,popular">Full‑Stack</button>
+            <button type="button" class="btn-outline text-sm" data-track="cyber" data-tags="cybersecurity,popular">Cybersecurity</button>
+            <button type="button" class="btn-outline text-sm" data-track="cloud" data-tags="cloud,fullstack">Cloud</button>
+          </div>
+        </div>
+
+        <!-- Parent/Child Linking Card -->
+        <div class="mt-8 p-4 rounded-lg border border-indigo-200 bg-indigo-50">
+          {% if user.role == 'student' %}
+          <h3 class="text-lg font-semibold text-indigo-900">Link a Parent</h3>
+          <p class="text-sm text-indigo-800 mb-3">Optionally add a parent/guardian email to receive your progress updates.</p>
+          <form id="parent-link-form" onsubmit="return false;">
+            {% csrf_token %}
+            <input type="hidden" name="step" value="parent_link" />
+            <div class="flex flex-col md:flex-row gap-3 items-start md:items-end">
+              <input type="email" name="parent_email" placeholder="parent@example.com" class="w-full md:w-80 px-3 py-2 rounded-lg border border-indigo-200" />
+              <label class="inline-flex items-center gap-2 text-xs text-indigo-900">
+                <input type="checkbox" name="parent_consent" class="rounded border-indigo-300" /> I consent to share my learning updates with my parent
+              </label>
+              <button type="button" class="btn-outline" onclick="psSave('parent-link-form')">Send Invite</button>
+            </div>
+          </form>
+          {% elif user.role == 'parent' %}
+          <h3 class="text-lg font-semibold text-indigo-900">Link Your Child</h3>
+          <p class="text-sm text-indigo-800 mb-3">Enter your child's EduVanta email to connect their account.</p>
+          <form id="child-link-form" onsubmit="return false;">
+            {% csrf_token %}
+            <input type="hidden" name="step" value="parent_link" />
+            <div class="flex flex-col md:flex-row gap-3 items-start md:items-end">
+              <input type="email" name="child_email" placeholder="child@example.com" class="w-full md:w-80 px-3 py-2 rounded-lg border border-indigo-200" />
+              <label class="inline-flex items-center gap-2 text-xs text-indigo-900">
+                <input type="checkbox" name="parent_consent" class="rounded border-indigo-300" /> I acknowledge EduVanta will send me updates about my child's progress
+              </label>
+              <button type="button" class="btn-outline" onclick="psSave('child-link-form')">Start Linking</button>
+            </div>
+          </form>
+          {% endif %}
+          <div id="link-flash" class="hidden mt-2 text-sm"></div>
+        </div>
+
+        <div class="mt-6 flex items-center justify-between">
+          <div class="text-xs text-gray-500">Saved selections are applied on Complete.</div>
+          <form id="complete-form" action="{% url 'accounts:profile_setup_complete' %}" method="post">
+            {% csrf_token %}
+            <button type="submit" class="btn-primary">Complete Setup</button>
+          </form>
+        </div>
+      </section>
+    </div>
+  </div>
+</div>
+
+<script>
+function psSave(formId){
+  const form = document.getElementById(formId);
+  if(!form) return Promise.resolve({skipped:true});
+  const fd = new FormData(form);
+  return fetch("{% url 'accounts:profile_setup_save' %}", {
+    method: 'POST',
+    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+    body: fd
+  }).then(r=>r.json()).then(d=>{
+    const el = document.getElementById('link-flash');
+    if(d && d.ok){ if(el){ el.className='mt-2 text-sm text-green-700'; el.textContent='Saved.'; el.style.display='block'; } }
+    else { if(el){ el.className='mt-2 text-sm text-red-700'; el.textContent=(d && d.error) || 'Failed to save.'; el.style.display='block'; } }
+    if(d && d.ok){ showToast('Saved', 'success'); }
+    return d;
+  }).catch((e)=>{
+    const el = document.getElementById('link-flash');
+    if(el){ el.className='mt-2 text-sm text-red-700'; el.textContent='Failed to save.'; el.style.display='block'; }
+    return {ok:false, error: String(e||'save failed')};
+  });
+}
+
+  
+
+// Advanced scoping: Program → Dept → Spec → Subspec
+(function(){
+  const selected = { programDeptIds: new Set(), programName: '', deptIds: new Set(), specIds: new Set(), subIds: new Set() };
+  const $$ = sel => Array.from(document.querySelectorAll(sel));
+  const progBtns = $$(".prog-btn");
+  const deptLabels = $$("#dept-list [data-dept-id]");
+  const specLabels = $$("#spec-list [data-dept-id]");
+  const subspecLabels = $$("#subspec-list [data-spec-id]");
+  const courseLabels = $$("#course-list label[data-dept-id]");
+  const levelTabs = $$(".level-tab");
+  const hideToggle = document.getElementById('hide-toggle');
+  const pillsEl = document.getElementById('selected-pills');
+  const btnResetProgram = document.getElementById('btn-reset-program');
+  const btnResetDept = document.getElementById('btn-reset-dept');
+  const btnResetSpec = document.getElementById('btn-reset-spec');
+  const btnResetSubspec = document.getElementById('btn-reset-subspec');
+  let currentLevel = 'all';
+  let hideNonMatching = true;
+  if(hideToggle){
+    hideNonMatching = !!hideToggle.checked;
+    hideToggle.addEventListener('change', ()=>{ hideNonMatching = !!hideToggle.checked; filterAll(); });
+  }
+
+  // De-duplicate UI items (display-only) for this page
+  function dedupeUI(){
+    // Programs: keep first per program name
+    const seenProg = new Set();
+    progBtns.forEach(btn => {
+      const name = (btn.dataset.programName||'').toLowerCase();
+      const card = btn.closest('[role="listitem"]') || btn;
+      if(seenProg.has(name)) { card.style.display = 'none'; }
+      else { seenProg.add(name); }
+    });
+
+    // Departments: keep first per dept code
+    const seenDept = new Set();
+    deptLabels.forEach(lbl => {
+      const code = (lbl.getAttribute('data-dept-code')||'').toUpperCase();
+      if(seenDept.has(code)) { lbl.style.display = 'none'; }
+      else { seenDept.add(code); }
+    });
+
+    // Specializations: keep first per (dept_id, name)
+    const seenSpec = new Set();
+    specLabels.forEach(lbl => {
+      const dId = lbl.getAttribute('data-dept-id')||'';
+      const nm = (lbl.getAttribute('data-name')||'').toLowerCase();
+      const key = dId + '|' + nm;
+      if(seenSpec.has(key)) { lbl.style.display = 'none'; }
+      else { seenSpec.add(key); }
+    });
+
+    // Subspecializations: keep first per (spec_id, name)
+    const seenSub = new Set();
+    subspecLabels.forEach(lbl => {
+      const sId = lbl.getAttribute('data-spec-id')||'';
+      const nm = (lbl.getAttribute('data-name')||'').toLowerCase();
+      const key = sId + '|' + nm;
+      if(seenSub.has(key)) { lbl.style.display = 'none'; }
+      else { seenSub.add(key); }
+    });
+
+    // Courses: keep first per title text (case-insensitive)
+    const seenCourse = new Set();
+    courseLabels.forEach(lbl => {
+      const titleEl = lbl.querySelector('.font-medium');
+      const nm = (titleEl ? titleEl.textContent : lbl.getAttribute('data-title') || '').trim().toLowerCase();
+      if(!nm) return;
+      if(seenCourse.has(nm)) { lbl.style.display = 'none'; }
+      else { seenCourse.add(nm); }
+    });
+  }
+
+  // Pills rendering
+  function renderPills(){
+    if(!pillsEl) return;
+    const pills = [];
+    if(selected.programName){ pills.push({type:'program', key:selected.programName, label:`Program: ${selected.programName.toUpperCase()}`}); }
+    // Depts
+    deptLabels.forEach(el=>{
+      const cb = el.querySelector('input[type="checkbox"]');
+      if(cb && cb.checked){
+        const code = (el.getAttribute('data-dept-code')||'').toUpperCase();
+        const name = (el.querySelector('.font-medium')?.textContent||code);
+        pills.push({type:'dept', key:cb.value, label:`Dept: ${code || name}`});
+      }
+    });
+    // Specs
+    specLabels.forEach(el=>{
+      const cb = el.querySelector('input[type="checkbox"]');
+      if(cb && cb.checked){
+        const nm = (el.getAttribute('data-name')||'');
+        pills.push({type:'spec', key:cb.value, label:`Spec: ${nm}`});
+      }
+    });
+    // Subspecs
+    subspecLabels.forEach(el=>{
+      const cb = el.querySelector('input[type="checkbox"]');
+      if(cb && cb.checked){
+        const nm = (el.getAttribute('data-name')||'');
+        pills.push({type:'subspec', key:cb.value, label:`Sub: ${nm}`});
+      }
+    });
+    // Render
+    pillsEl.innerHTML = pills.map(p=>`<span class="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-indigo-100 text-indigo-800 border border-indigo-200">${p.label}<button type="button" class="ml-1 text-indigo-600" data-pill-type="${p.type}" data-pill-key="${p.key}">×</button></span>`).join(' ');
+    // Bind remove handlers
+    pillsEl.querySelectorAll('button[data-pill-type]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const t = btn.getAttribute('data-pill-type');
+        const k = btn.getAttribute('data-pill-key');
+        if(t==='program'){ selected.programDeptIds = new Set(); selected.programName=''; progBtns.forEach(b=>b.classList.remove('ring-2','ring-indigo-400')); filterDept(); }
+        if(t==='dept'){
+          deptLabels.forEach(el=>{ const cb = el.querySelector('input[type="checkbox"]'); if(cb && cb.value===k){ cb.checked=false; selected.deptIds.delete(parseInt(k)); }});
+          filterSpec(); psSave('dept-form');
+        }
+        if(t==='spec'){
+          specLabels.forEach(el=>{ const cb = el.querySelector('input[type="checkbox"]'); if(cb && cb.value===k){ cb.checked=false; selected.specIds.delete(parseInt(k)); }});
+          filterSubspec(); psSave('spec-form');
+        }
+        if(t==='subspec'){
+          subspecLabels.forEach(el=>{ const cb = el.querySelector('input[type="checkbox"]'); if(cb && cb.value===k){ cb.checked=false; selected.subIds.delete(parseInt(k)); }});
+          filterCourses(); psSave('subspec-form');
+        }
+        renderPills(); filterCourses();
+        updateProgramCounts();
+      });
+    });
+  }
+
+  // Compute how many departments offer each program and set tooltip
+  function updateProgramCounts(){
+    const groups = new Map(); // name -> {codes:Set, cards:HTMLElement[]}
+    document.querySelectorAll('.prog-btn').forEach(btn => {
+      const name = (btn.dataset.programName||'').toLowerCase();
+      const dcode = (btn.closest('[role="listitem"]')?.querySelector('.text-xs')?.textContent || '').match(/Dept:\s*(\w+)/i);
+      const code = dcode ? dcode[1].toUpperCase() : '';
+      if(!groups.has(name)) groups.set(name, {codes: new Set(), cards: []});
+      const g = groups.get(name);
+      if(code) g.codes.add(code);
+      const card = btn.closest('[role="listitem"]');
+      if(card) g.cards.push(card);
+    });
+    groups.forEach((g) => {
+      const visibleCard = g.cards.find(c => c.style.display !== 'none') || g.cards[0];
+      if(!visibleCard) return;
+      const badge = visibleCard.querySelector('.prog-count');
+      if(!badge) return;
+      const codes = Array.from(g.codes).sort();
+      badge.textContent = codes.length ? `${codes.length} depts` : '';
+      badge.title = codes.join(', ');
+    });
+  }
+
+  // Subspecialization selection listeners
+  subspecLabels.forEach(el => {
+    const cb = el.querySelector('input[type="checkbox"]');
+    if(!cb) return;
+    cb.addEventListener('change', function(){
+      const id = parseInt(this.value);
+      if(this.checked) selected.subIds.add(id); else selected.subIds.delete(id);
+      filterCourses();
+      renderPills();
+      psSave('subspec-form');
+    });
+  });
+
+  // Reset buttons
+  if(btnResetProgram){ btnResetProgram.addEventListener('click', ()=>{
+    // Clear program selection
+    selected.programDeptIds = new Set();
+    selected.programName = '';
+    progBtns.forEach(b=>b.classList.remove('ring-2','ring-indigo-400'));
+    // Also clear downstream selections fully
+    deptLabels.forEach(el=>{ const cb = el.querySelector('input[type="checkbox"]'); if(cb){ cb.checked = false; } });
+    specLabels.forEach(el=>{ const cb = el.querySelector('input[type="checkbox"]'); if(cb){ cb.checked = false; } });
+    subspecLabels.forEach(el=>{ const cb = el.querySelector('input[type="checkbox"]'); if(cb){ cb.checked = false; } });
+    selected.deptIds = new Set();
+    selected.specIds = new Set();
+    selected.subIds = new Set();
+    filterDept(); filterSpec(); filterSubspec(); filterCourses(); renderPills();
+  }); }
+  if(btnResetDept){ btnResetDept.addEventListener('click', ()=>{
+    deptLabels.forEach(el=>{ const cb = el.querySelector('input[type="checkbox"]'); if(cb){ cb.checked=false; } });
+    selected.deptIds = new Set(); filterSpec(); filterSubspec(); filterCourses(); renderPills(); psSave('dept-form');
+  }); }
+  if(btnResetSpec){ btnResetSpec.addEventListener('click', ()=>{
+    specLabels.forEach(el=>{ const cb = el.querySelector('input[type="checkbox"]'); if(cb){ cb.checked=false; } });
+    selected.specIds = new Set(); filterSubspec(); filterCourses(); renderPills(); psSave('spec-form');
+  }); }
+  if(btnResetSubspec){ btnResetSubspec.addEventListener('click', ()=>{
+    subspecLabels.forEach(el=>{ const cb = el.querySelector('input[type="checkbox"]'); if(cb){ cb.checked=false; } });
+    selected.subIds = new Set(); filterCourses(); renderPills(); psSave('subspec-form');
+  }); }
+
+  function applyVisibility(el, visible){
+    if(hideNonMatching){ el.style.display = visible ? '' : 'none'; el.classList.remove('opacity-40','pointer-events-none'); el.removeAttribute('aria-disabled'); }
+    else { el.style.display = ''; if(!visible){ el.classList.add('opacity-40','pointer-events-none'); el.setAttribute('aria-disabled','true'); } else { el.classList.remove('opacity-40','pointer-events-none'); el.removeAttribute('aria-disabled'); } }
+  }
+
+  function filterDept(){
+    if(!deptLabels.length) return;
+    deptLabels.forEach(el => {
+      if(!selected.programDeptIds || selected.programDeptIds.size===0){ applyVisibility(el, true); return; }
+      const dId = parseInt(el.getAttribute('data-dept-id'));
+      applyVisibility(el, selected.programDeptIds.has(dId));
+      // Uncheck hidden
+      if(hideNonMatching && el.style.display==='none'){
+        const cb = el.querySelector('input[type="checkbox"]'); if(cb){ cb.checked=false; selected.deptIds.delete(parseInt(cb.value)); }
+      }
+    });
+    filterSpec();
+  }
+  function filterSpec(){
+    const allowed = selected.deptIds.size ? new Set([...selected.deptIds]) : (selected.programDeptIds && selected.programDeptIds.size? new Set([...selected.programDeptIds]) : null);
+    specLabels.forEach(el => {
+      const dId = parseInt(el.getAttribute('data-dept-id'));
+      const visible = (allowed===null) || allowed.has(dId);
+      applyVisibility(el, visible);
+      if(hideNonMatching && !visible){ const cb = el.querySelector('input[type="checkbox"]'); if(cb){ cb.checked=false; selected.specIds.delete(parseInt(cb.value)); } }
+    });
+    filterSubspec();
+  }
+  function filterSubspec(){
+    const allowed = selected.specIds.size ? new Set([...selected.specIds]) : null;
+    subspecLabels.forEach(el => {
+      const sId = parseInt(el.getAttribute('data-spec-id'));
+      const visible = (allowed===null) || allowed.has(sId);
+      applyVisibility(el, visible);
+    });
+    filterCourses();
+  }
+
+  function filterCourses(){
+    // Determine allowed sets
+    const allowDept = selected.deptIds.size ? new Set([...selected.deptIds]) : (selected.programDeptIds && selected.programDeptIds.size ? new Set([...selected.programDeptIds]) : null);
+    const allowSpec = selected.specIds.size ? new Set([...selected.specIds]) : null;
+    const allowSub = selected.subIds.size ? new Set([...selected.subIds]) : null;
+    courseLabels.forEach(lbl => {
+      const dId = parseInt(lbl.getAttribute('data-dept-id')||'0')||0;
+      const sId = parseInt(lbl.getAttribute('data-spec-id')||'0')||0;
+      const ssAttr = lbl.getAttribute('data-subspec-id')||'';
+      const ssId = ssAttr ? parseInt(ssAttr)||0 : 0;
+      let visible = true;
+      if(allowDept !== null) visible = visible && allowDept.has(dId);
+      if(allowSpec !== null) visible = visible && allowSpec.has(sId);
+      if(allowSub !== null) visible = visible && allowSub.has(ssId);
+      applyVisibility(lbl, visible);
+      if(hideNonMatching && !visible){
+        const cb = lbl.querySelector('input[type="checkbox"]');
+        if(cb) cb.checked = false;
+      }
+    });
+  }
+
+  function filterPrograms(){
+    // Program level tab filtering
+    progBtns.forEach(b => {
+      const lvl = (b.dataset.programLevel || 'all').toLowerCase();
+      const match = (currentLevel === 'all') || (lvl.includes(currentLevel));
+      applyVisibility(b.closest('[role="listitem"]') || b, match);
+    });
+    // When viewing All, sort cards alphabetically by program name
+    if(currentLevel === 'all'){
+      const grid = document.querySelector('#step-2 [role="list"]');
+      if(grid){
+        const cards = Array.from(grid.children).filter(el => el.matches('[role="listitem"]'));
+        cards.sort((a,b)=>{
+          const an = (a.querySelector('.font-medium')?.textContent||'').toLowerCase();
+          const bn = (b.querySelector('.font-medium')?.textContent||'').toLowerCase();
+          return an.localeCompare(bn);
+        });
+        cards.forEach(c=>grid.appendChild(c));
+      }
+    }
+  }
+
+  function filterAll(){
+    filterPrograms();
+    filterDept();
+    filterSpec();
+    filterSubspec();
+    filterCourses();
+    updateProgramCounts();
+  }
+
+  progBtns.forEach(btn => btn.addEventListener('click', function(){
+    const progName = (this.dataset.programName || '').toLowerCase();
+    // Aggregate departments offering the same program name
+    const related = progBtns.filter(b => (b.dataset.programName || '').toLowerCase() === progName);
+    selected.programDeptIds = new Set(related.map(b => parseInt(b.dataset.deptId || '0')).filter(Boolean));
+    selected.programName = progName;
+    // UI affordance: highlight all buttons with the same program name
+    progBtns.forEach(b=>b.classList.remove('ring-2','ring-indigo-400'));
+    related.forEach(b=>b.classList.add('ring-2','ring-indigo-400'));
+    filterDept();
+    renderPills();
+    updateProgramCounts();
+  }));
+
+  // Program level tabs
+  levelTabs.forEach(tab => tab.addEventListener('click', function(){
+    levelTabs.forEach(t => { t.classList.remove('ring-1','ring-indigo-400'); t.setAttribute('aria-selected','false'); });
+    this.classList.add('ring-1','ring-indigo-400');
+    this.setAttribute('aria-selected','true');
+    currentLevel = (this.dataset.level || 'all').toLowerCase();
+    filterPrograms();
+    updateProgramCounts();
+  }));
+
+  // Recommended quick actions
+  document.querySelectorAll('.rec-prog').forEach(btn=>btn.addEventListener('click', ()=>{
+    const name = (btn.dataset.progName||'').toLowerCase();
+    const related = progBtns.filter(b => (b.dataset.programName||'').toLowerCase() === name);
+    if(related.length){ related[0].click(); showToast(`Applied program: ${name}`, 'success'); }
+  }));
+  document.querySelectorAll('.rec-dept').forEach(btn=>btn.addEventListener('click', ()=>{
+    const code = (btn.dataset.deptCode||'').toUpperCase();
+    deptLabels.forEach(el => {
+      const dcode = (el.getAttribute('data-dept-code')||'').toUpperCase();
+      const cb = el.querySelector('input[type="checkbox"]');
+      if(!cb) return;
+      if(dcode === code){ cb.checked = true; selected.deptIds.add(parseInt(cb.value)); }
+    });
+    filterSpec(); filterCourses();
+    renderPills();
+    psSave('dept-form');
+    updateProgramCounts();
+  }));
+
+  // Dept selection listeners
+  deptLabels.forEach(el => {
+    const cb = el.querySelector('input[type="checkbox"]');
+    if(!cb) return;
+    cb.addEventListener('change', function(){
+      const id = parseInt(this.value);
+      if(this.checked) selected.deptIds.add(id); else selected.deptIds.delete(id);
+      filterSpec();
+      filterCourses();
+      renderPills();
+      psSave('dept-form');
+    });
+  });
+
+  // Spec selection listeners
+  specLabels.forEach(el => {
+    const cb = el.querySelector('input[type="checkbox"]');
+    if(!cb) return;
+    cb.addEventListener('change', function(){
+      const id = parseInt(this.value);
+      if(this.checked) selected.specIds.add(id); else selected.specIds.delete(id);
+      filterSubspec();
+      filterCourses();
+      renderPills();
+      psSave('spec-form');
+    });
+  });
+
+  // Text search for specializations
+  const specSearch = document.getElementById('spec-search');
+  if(specSearch){
+    specSearch.addEventListener('input', function(){
+      const q = (this.value||'').toLowerCase();
+      specLabels.forEach(el => {
+        const nm = (el.getAttribute('data-name')||'');
+        el.style.display = (!q || nm.includes(q)) ? '' : 'none';
+      });
+    });
+  }
+  // Text search for subspecializations
+  const subspecSearch = document.getElementById('subspec-search');
+  if(subspecSearch){
+    subspecSearch.addEventListener('input', function(){
+      const q = (this.value||'').toLowerCase();
+      subspecLabels.forEach(el => {
+        const nm = (el.getAttribute('data-name')||'');
+        el.style.display = (!q || nm.includes(q)) ? '' : 'none';
+      });
+    });
+  }
+  // Tracks selection: auto-check courses whose label data-tags contain any of the track tags
+  const trackBar = document.getElementById('track-buttons');
+  if(trackBar){
+    trackBar.addEventListener('click', function(e){
+      const btn = e.target.closest('button[data-tags]');
+      if(!btn) return;
+      const tags = (btn.dataset.tags || '').toLowerCase().split(',').map(s=>s.trim()).filter(Boolean);
+      const courseLabels = Array.from(document.querySelectorAll('label[data-tags]'));
+      let selectedCount = 0;
+      courseLabels.forEach(lbl => {
+        const lblTags = (lbl.getAttribute('data-tags') || '').toLowerCase().split(',');
+        const match = tags.some(t => lblTags.includes(t));
+        const cb = lbl.querySelector('input[type="checkbox"]');
+        if(cb){ cb.checked = match || cb.checked; if(match) selectedCount++; }
+      });
+      showToast(`Applied track: ${btn.dataset.track} (${selectedCount} courses)`, 'success');
+    });
+  }
+
+  // Student defaults: pre-select B.Tech and CSE/AI if role is student
+  const rootEl = document.getElementById('profile-setup-root');
+  const roleStr = (rootEl && rootEl.dataset && rootEl.dataset.role) ? rootEl.dataset.role.toLowerCase() : '';
+  const IS_STUDENT = roleStr === 'student';
+  if (IS_STUDENT) {
+    // Click a B.Tech program button to surface related departments
+    const related = progBtns.filter(b => (b.dataset.programName||'') === 'b.tech');
+    if(related.length){ related[0].click(); }
+    // Pre-check CSE and AI departments if available
+    deptLabels.forEach(el => {
+      const code = (el.getAttribute('data-dept-code')||'').toUpperCase();
+      const cb = el.querySelector('input[type="checkbox"]');
+      if(!cb) return;
+      if(code === 'CSE' || code === 'AI'){ cb.checked = true; selected.deptIds.add(parseInt(cb.value)); }
+    });
+    filterSpec();
+    filterCourses();
+  }
+})();
+</script>
+<!-- Toast container -->
+<div id="toast-stack" class="fixed top-4 right-4 z-50 space-y-2"></div>
+
+<!-- Sticky action bar (throttled visibility) -->
+<div id="action-bar" class="fixed bottom-0 left-0 right-0 z-40 hidden">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-3">
+    <div class="rounded-xl shadow-lg bg-white border border-gray-200 p-3 flex items-center justify-between">
+      <div class="text-xs text-gray-500">Tip: Use the left guide to jump between sections. Save as you go or use Save All.</div>
+      <div class="flex items-center gap-2">
+        <button type="button" id="btn-top" class="btn-outline">Top</button>
+        <button type="button" id="btn-save-all" class="btn-outline">Save All</button>
+        <button type="button" id="btn-complete" class="btn-primary">Complete Setup</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Toasts
+function showToast(msg, type){
+  const stack = document.getElementById('toast-stack');
+  if(!stack) return;
+  const el = document.createElement('div');
+  el.className = 'px-3 py-2 rounded shadow text-sm transition opacity-0';
+  if(type==='success') el.classList.add('bg-green-600','text-white');
+  else if(type==='error') el.classList.add('bg-red-600','text-white');
+  else el.classList.add('bg-gray-800','text-white');
+  el.textContent = msg || 'Saved';
+  stack.appendChild(el);
+  requestAnimationFrame(()=>{ el.style.opacity='1'; });
+  setTimeout(()=>{ el.style.opacity='0'; setTimeout(()=>{ el.remove(); }, 250); }, 1500);
+}
+
+// Scroll to top
+document.getElementById('btn-top')?.addEventListener('click', function(){
+  window.scrollTo({top:0, behavior:'smooth'});
+});
+
+// Inline validation helpers
+function markInvalid(input, msg){
+  input.setAttribute('aria-invalid','true');
+  input.classList.add('ring-2','ring-red-400','border-red-400');
+  let hint = input.parentElement.querySelector('.hint-error');
+  if(!hint){
+    hint = document.createElement('div');
+    hint.className = 'hint-error text-xs text-red-600 mt-1';
+    input.parentElement.appendChild(hint);
+  }
+  hint.textContent = msg || 'Please check this field';
+}
+function clearInvalid(input){
+  input.removeAttribute('aria-invalid');
+  input.classList.remove('ring-2','ring-red-400','border-red-400');
+  const hint = input.parentElement.querySelector('.hint-error');
+  if(hint){ hint.remove(); }
+}
+function validateAll(){
+  const container = document.querySelector('.setup-container') || document;
+  const candidates = Array.from(container.querySelectorAll('input, textarea'));
+  let firstInvalid = null;
+  candidates.forEach(el => clearInvalid(el));
+  for(const el of candidates){
+    // Skip hidden elements
+    const rect = el.getBoundingClientRect();
+    if(rect.width===0 && rect.height===0) continue;
+    // Required check
+    if(el.hasAttribute('required') && !el.value.trim()){
+      markInvalid(el, 'This field is required');
+      if(!firstInvalid) firstInvalid = el;
+    }
+    // Email format
+    if(el.type === 'email' && el.value){
+      const ok = /[^@\s]+@[^@\s]+\.[^@\s]{2,}/.test(el.value);
+      if(!ok){ markInvalid(el, 'Enter a valid email'); if(!firstInvalid) firstInvalid = el; }
+    }
+  }
+  if(firstInvalid){
+    firstInvalid.focus({preventScroll:false});
+    firstInvalid.scrollIntoView({behavior:'smooth', block:'center'});
+    return false;
+  }
+  return true;
+}
+
+// Save All sequencing
+document.getElementById('btn-save-all')?.addEventListener('click', async function(){
+  const tasks = [
+    'personal-info-form',
+    'dept-form',
+    'spec-form',
+    'subspec-form',
+  ];
+  // Role-based optional forms
+  if(document.getElementById('parent-link-form')) tasks.push('parent-link-form');
+  if(document.getElementById('child-link-form')) tasks.push('child-link-form');
+  for(const id of tasks){
+    try{ await psSave(id); }catch(e){ /* continue */ }
+  }
+  showToast('All saved', 'success');
+});
+
+// Complete with validation
+document.getElementById('btn-complete')?.addEventListener('click', function(){
+  if(!validateAll()) return;
+  // Submit the existing complete form
+  document.getElementById('complete-form')?.submit();
+});
+
+// Throttle action bar visibility until scrolling past Step 1
+(function(){
+  const bar = document.getElementById('action-bar');
+  const step1 = document.getElementById('step-1');
+  if(!bar || !step1) return;
+  function onScroll(){
+    const rect = step1.getBoundingClientRect();
+    const past = rect.bottom < (window.innerHeight * 0.7);
+    if(past) bar.classList.remove('hidden'); else bar.classList.add('hidden');
+  }
+  onScroll();
+  window.addEventListener('scroll', onScroll, { passive: true });
+})();
+</script>
+{% endblock %}

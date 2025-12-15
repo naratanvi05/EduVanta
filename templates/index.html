@@ -1,0 +1,500 @@
+{% extends 'base.html' %}
+
+{% block title %}EduVanta - Learn, Teach, Lead{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Hero animations */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .hero-text {
+        animation: fadeInUp 0.8s ease-out;
+    }
+    
+    .hero-cta {
+        animation: fadeInUp 1s ease-out;
+    }
+    
+    /* XP Circle Animation */
+    @keyframes xpPulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+    }
+    
+    .xp-circle {
+        animation: xpPulse 2s infinite;
+    }
+    
+    /* Course card hover effects */
+    .course-card {
+        transition: all 0.3s ease;
+    }
+    
+    .course-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.4);
+    }
+    
+    /* Category pill animations */
+    .category-pill {
+        transition: all 0.2s ease;
+    }
+    
+    .category-pill:hover {
+        transform: scale(1.05);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="relative bg-gradient-to-br from-indigo-600 to-cyan-500 text-white overflow-hidden">
+    <!-- Background pattern -->
+    <div class="absolute inset-0 opacity-10">
+        <svg class="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+            <defs>
+                <pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse">
+                    <path d="M 10 0 L 0 0 0 10" fill="none" stroke="white" stroke-width="0.5"/>
+                </pattern>
+            </defs>
+            <rect width="100" height="100" fill="url(#grid)" />
+        </svg>
+    </div>
+    
+    <div class="container mx-auto px-4 py-20 md:py-32 relative z-10">
+        <div class="flex flex-col md:flex-row items-center justify-between">
+            <div class="md:w-1/2 mb-10 md:mb-0 hero-text">
+                <h1 class="text-4xl md:text-6xl font-bold mb-4 leading-tight">
+                    Learn. Teach. <span class="text-yellow-300">Lead.</span>
+                </h1>
+                <p class="text-xl md:text-2xl mb-8 text-indigo-100">
+                    Join EduVanta's gamified learning platform and unlock your potential with interactive courses, real-time progress tracking, and a supportive community.                    
+                </p>
+                <div class="flex flex-wrap gap-4 hero-cta">
+                    <a href="/accounts/login/" class="px-8 py-3 bg-white text-indigo-600 rounded-xl font-bold shadow-lg hover:shadow-indigo-500/50 transition duration-300 transform hover:-translate-y-1">
+                        Get Started
+                    </a>
+                    {% if not user.is_authenticated or user.role != 'admin' %}
+                    <a href="/accounts/register/" class="px-8 py-3 bg-transparent border-2 border-white text-white rounded-xl font-bold hover:bg-white hover:text-indigo-600 transition duration-300">
+                        Register
+                    </a>
+                    {% endif %}
+                    <a href="/accounts/login/" class="px-8 py-3 bg-transparent border-2 border-white text-white rounded-xl font-bold hover:bg-white hover:text-indigo-600 transition duration-300">
+                        Sign In
+                    </a>
+                </div>
+            </div>
+            
+            <div class="md:w-1/2 flex justify-center">
+                <div class="relative w-full max-w-md">
+                    <!-- Main illustration -->
+                    <img src="/static/images/hero-illustration.svg" alt="Learning illustration" class="w-full">
+                    
+                    <!-- Animated XP circles -->
+                    <div class="absolute -top-5 -right-5 bg-yellow-400 text-indigo-900 rounded-full w-16 h-16 flex items-center justify-center font-bold shadow-lg xp-circle">
+                        +50 XP
+                    </div>
+                    <div class="absolute bottom-10 -left-5 bg-cyan-400 text-indigo-900 rounded-full w-14 h-14 flex items-center justify-center font-bold shadow-lg xp-circle" style="animation-delay: 0.5s">
+                        +25 XP
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Featured Courses Section -->
+<section class="py-16 bg-gray-50">
+    <div class="container mx-auto px-4">
+        <div class="flex justify-between items-center mb-10">
+            <h2 class="text-3xl font-bold text-gray-900">Featured Courses</h2>
+            <div class="flex gap-2">
+                <button class="category-pill px-4 py-2 rounded-full text-sm font-medium bg-indigo-100 text-indigo-700 hover:bg-indigo-200 transition">
+                    All
+                </button>
+                <button class="category-pill px-4 py-2 rounded-full text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition">
+                    Technology
+                </button>
+                <button class="category-pill px-4 py-2 rounded-full text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition">
+                    Science
+                </button>
+                <button class="category-pill px-4 py-2 rounded-full text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition">
+                    Business
+                </button>
+            </div>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <!-- Course Card 1 -->
+            <div class="course-card bg-white rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all">
+                <div class="relative">
+                    <img src="/static/images/course-python.jpg" alt="Python Programming" class="w-full h-48 object-cover">
+                    <div class="absolute top-4 left-4 bg-indigo-600 text-white text-xs font-bold px-3 py-1 rounded-full">
+                        Technology
+                    </div>
+                    <div class="absolute top-4 right-4 bg-yellow-400 text-indigo-900 text-xs font-bold px-3 py-1 rounded-full">
+                        +200 XP
+                    </div>
+                </div>
+                <div class="p-6">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-sm text-gray-500">8 weeks • 24 lessons</span>
+                        <div class="flex items-center">
+                            <svg class="w-4 h-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+                            </svg>
+                            <span class="ml-1 text-sm font-medium text-gray-700">4.9</span>
+                        </div>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-2">Python Programming Masterclass</h3>
+                    <p class="text-gray-600 mb-4 line-clamp-2">Master Python from basics to advanced concepts with hands-on projects and real-world applications.</p>
+                    <div class="flex items-center mb-4">
+                        <img src="/static/images/instructor-1.jpg" alt="Instructor" class="w-8 h-8 rounded-full mr-2">
+                        <span class="text-sm font-medium text-gray-700">Dr. Alex Johnson</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-lg font-bold text-indigo-600">$49.99</span>
+                        <a href="#" class="px-4 py-2 bg-gradient-to-r from-indigo-600 to-indigo-700 text-white rounded-lg font-medium hover:shadow-lg transition duration-300">
+                            View Course
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Course Card 2 -->
+            <div class="course-card bg-white rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all">
+                <div class="relative">
+                    <img src="/static/images/course-ai.jpg" alt="AI Fundamentals" class="w-full h-48 object-cover">
+                    <div class="absolute top-4 left-4 bg-indigo-600 text-white text-xs font-bold px-3 py-1 rounded-full">
+                        Technology
+                    </div>
+                    <div class="absolute top-4 right-4 bg-yellow-400 text-indigo-900 text-xs font-bold px-3 py-1 rounded-full">
+                        +250 XP
+                    </div>
+                </div>
+                <div class="p-6">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-sm text-gray-500">10 weeks • 30 lessons</span>
+                        <div class="flex items-center">
+                            <svg class="w-4 h-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+                            </svg>
+                            <span class="ml-1 text-sm font-medium text-gray-700">4.8</span>
+                        </div>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-2">AI and Machine Learning Fundamentals</h3>
+                    <p class="text-gray-600 mb-4 line-clamp-2">Learn the core concepts of artificial intelligence and machine learning with practical examples.</p>
+                    <div class="flex items-center mb-4">
+                        <img src="/static/images/instructor-2.jpg" alt="Instructor" class="w-8 h-8 rounded-full mr-2">
+                        <span class="text-sm font-medium text-gray-700">Prof. Sarah Chen</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-lg font-bold text-indigo-600">$59.99</span>
+                        <a href="#" class="px-4 py-2 bg-gradient-to-r from-indigo-600 to-indigo-700 text-white rounded-lg font-medium hover:shadow-lg transition duration-300">
+                            View Course
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Course Card 3 -->
+            <div class="course-card bg-white rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all">
+                <div class="relative">
+                    <img src="/static/images/course-business.jpg" alt="Business Strategy" class="w-full h-48 object-cover">
+                    <div class="absolute top-4 left-4 bg-cyan-500 text-white text-xs font-bold px-3 py-1 rounded-full">
+                        Business
+                    </div>
+                    <div class="absolute top-4 right-4 bg-yellow-400 text-indigo-900 text-xs font-bold px-3 py-1 rounded-full">
+                        +180 XP
+                    </div>
+                </div>
+                <div class="p-6">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-sm text-gray-500">6 weeks • 18 lessons</span>
+                        <div class="flex items-center">
+                            <svg class="w-4 h-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+                            </svg>
+                            <span class="ml-1 text-sm font-medium text-gray-700">4.7</span>
+                        </div>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-2">Strategic Business Management</h3>
+                    <p class="text-gray-600 mb-4 line-clamp-2">Develop effective business strategies and leadership skills for the modern corporate environment.</p>
+                    <div class="flex items-center mb-4">
+                        <img src="/static/images/instructor-3.jpg" alt="Instructor" class="w-8 h-8 rounded-full mr-2">
+                        <span class="text-sm font-medium text-gray-700">Dr. Michael Roberts</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-lg font-bold text-indigo-600">$39.99</span>
+                        <a href="#" class="px-4 py-2 bg-gradient-to-r from-indigo-600 to-indigo-700 text-white rounded-lg font-medium hover:shadow-lg transition duration-300">
+                            View Course
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mt-10 text-center">
+            <a href="/courses/" class="px-6 py-3 bg-white border border-indigo-600 text-indigo-600 rounded-xl font-medium hover:bg-indigo-50 transition duration-300 inline-flex items-center">
+                Browse All Courses
+                <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+                </svg>
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Leaderboard Preview Section -->
+<section class="py-16 bg-white">
+    <div class="container mx-auto px-4">
+        <div class="flex flex-col md:flex-row items-center justify-between gap-10">
+            <div class="md:w-1/2">
+                <h2 class="text-3xl font-bold text-gray-900 mb-6">Join Our Learning Community</h2>
+                <p class="text-lg text-gray-600 mb-8">
+                    Compete with peers, earn XP, unlock badges, and climb the leaderboard as you master new skills. Our gamified learning experience makes education engaging and rewarding.                    
+                </p>
+                
+                <div class="bg-gradient-to-r from-indigo-50 to-cyan-50 rounded-xl p-6 border border-indigo-100">
+                    <h3 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
+                        <svg class="w-6 h-6 text-yellow-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M5 2a1 1 0 011 1v1h1a1 1 0 010 2H6v1a1 1 0 01-2 0V6H3a1 1 0 010-2h1V3a1 1 0 011-1zm0 10a1 1 0 011 1v1h1a1 1 0 110 2H6v1a1 1 0 11-2 0v-1H3a1 1 0 110-2h1v-1a1 1 0 011-1zm7-10a1 1 0 01.707.293l.707.707L15.414 5a1 1 0 11-1.414 1.414L13 5.414l-.707.707a1 1 0 01-1.414-1.414l.707-.707 1.414-1.414zM15 11a1 1 0 01.707.293l.707.707L17.414 13a1 1 0 11-1.414 1.414L15 13.414l-.707.707a1 1 0 01-1.414-1.414l.707-.707 1.414-1.414z" clip-rule="evenodd"></path>
+                        </svg>
+                        Achievements Unlocked
+                    </h3>
+                    
+                    <div class="flex flex-wrap gap-3 mb-4">
+                        <div class="bg-white rounded-lg px-3 py-2 shadow-sm flex items-center">
+                            <span class="text-2xl mr-2">🏆</span>
+                            <span class="text-sm font-medium">First Course Completed</span>
+                        </div>
+                        <div class="bg-white rounded-lg px-3 py-2 shadow-sm flex items-center">
+                            <span class="text-2xl mr-2">🔥</span>
+                            <span class="text-sm font-medium">7-Day Streak</span>
+                        </div>
+                        <div class="bg-white rounded-lg px-3 py-2 shadow-sm flex items-center">
+                            <span class="text-2xl mr-2">🎓</span>
+                            <span class="text-sm font-medium">Knowledge Explorer</span>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4">
+                        {% if not user.is_authenticated or user.role != 'admin' %}
+                        <a href="/accounts/register/" class="text-indigo-600 font-medium hover:text-indigo-800 transition flex items-center">
+                            Start earning badges
+                            <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+                            </svg>
+                        </a>
+                        {% else %}
+                        <a href="/accounts/login/" class="text-indigo-600 font-medium hover:text-indigo-800 transition flex items-center">
+                            Start earning badges
+                            <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+                            </svg>
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="md:w-1/2 bg-white rounded-xl shadow-xl p-6 border border-gray-100">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-xl font-bold text-gray-900">Leaderboard</h3>
+                    <div class="bg-indigo-100 text-indigo-800 rounded-full px-3 py-1 text-sm font-medium">This Week</div>
+                </div>
+                
+                <div class="space-y-4">
+                    <!-- Top 1 -->
+                    <div class="flex items-center p-3 bg-gradient-to-r from-yellow-50 to-yellow-100 rounded-lg border border-yellow-200">
+                        <div class="flex items-center justify-center w-8 h-8 bg-yellow-400 text-white rounded-full font-bold mr-4">1</div>
+                        <img src="/static/images/user-1.jpg" alt="User" class="w-10 h-10 rounded-full border-2 border-yellow-400 mr-4">
+                        <div class="flex-1">
+                            <h4 class="font-bold text-gray-900">Alex Thompson</h4>
+                            <p class="text-sm text-gray-600">Computer Science</p>
+                        </div>
+                        <div class="flex items-center bg-white px-3 py-1 rounded-full shadow-sm">
+                            <span class="text-yellow-500 font-bold mr-1">1,245</span>
+                            <span class="text-gray-600 text-sm">XP</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Top 2 -->
+                    <div class="flex items-center p-3 bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg border border-gray-200">
+                        <div class="flex items-center justify-center w-8 h-8 bg-gray-400 text-white rounded-full font-bold mr-4">2</div>
+                        <img src="/static/images/user-2.jpg" alt="User" class="w-10 h-10 rounded-full border-2 border-gray-400 mr-4">
+                        <div class="flex-1">
+                            <h4 class="font-bold text-gray-900">Samantha Lee</h4>
+                            <p class="text-sm text-gray-600">Data Science</p>
+                        </div>
+                        <div class="flex items-center bg-white px-3 py-1 rounded-full shadow-sm">
+                            <span class="text-gray-700 font-bold mr-1">1,180</span>
+                            <span class="text-gray-600 text-sm">XP</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Top 3 -->
+                    <div class="flex items-center p-3 bg-gradient-to-r from-orange-50 to-orange-100 rounded-lg border border-orange-200">
+                        <div class="flex items-center justify-center w-8 h-8 bg-orange-400 text-white rounded-full font-bold mr-4">3</div>
+                        <img src="/static/images/user-3.jpg" alt="User" class="w-10 h-10 rounded-full border-2 border-orange-400 mr-4">
+                        <div class="flex-1">
+                            <h4 class="font-bold text-gray-900">David Wilson</h4>
+                            <p class="text-sm text-gray-600">Artificial Intelligence</p>
+                        </div>
+                        <div class="flex items-center bg-white px-3 py-1 rounded-full shadow-sm">
+                            <span class="text-orange-500 font-bold mr-1">1,050</span>
+                            <span class="text-gray-600 text-sm">XP</span>
+                        </div>
+                    </div>
+                    
+                    <!-- More users -->
+                    <div class="flex items-center p-3 bg-white rounded-lg border border-gray-200">
+                        <div class="flex items-center justify-center w-8 h-8 bg-gray-200 text-gray-700 rounded-full font-bold mr-4">4</div>
+                        <img src="/static/images/user-4.jpg" alt="User" class="w-10 h-10 rounded-full border-2 border-gray-200 mr-4">
+                        <div class="flex-1">
+                            <h4 class="font-bold text-gray-900">Emily Johnson</h4>
+                            <p class="text-sm text-gray-600">Web Development</p>
+                        </div>
+                        <div class="flex items-center bg-gray-100 px-3 py-1 rounded-full">
+                            <span class="text-gray-700 font-bold mr-1">980</span>
+                            <span class="text-gray-600 text-sm">XP</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-6 text-center">
+                    <a href="#" class="text-indigo-600 font-medium hover:text-indigo-800 transition">View Full Leaderboard</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="py-16 bg-gradient-to-br from-indigo-50 via-white to-cyan-50">
+    <div class="container mx-auto px-4">
+        <div class="text-center mb-12">
+            <h2 class="text-3xl font-bold text-gray-900 mb-4">Why Choose EduVanta?</h2>
+            <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                Our platform combines education with gamification to create an engaging learning experience
+            </p>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <!-- Feature 1 -->
+            <div class="bg-white rounded-xl p-6 shadow-md hover:shadow-xl transition-all">
+                <div class="w-14 h-14 bg-indigo-100 rounded-lg flex items-center justify-center mb-6">
+                    <svg class="w-8 h-8 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                    </svg>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 mb-3">Interactive Courses</h3>
+                <p class="text-gray-600 mb-4">
+                    Engage with dynamic content, quizzes, and hands-on projects designed to reinforce learning and practical application.
+                </p>
+                <a href="#" class="text-indigo-600 font-medium hover:text-indigo-800 transition flex items-center">
+                    Learn more
+                    <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+                    </svg>
+                </a>
+            </div>
+            
+            <!-- Feature 2 -->
+            <div class="bg-white rounded-xl p-6 shadow-md hover:shadow-xl transition-all">
+                <div class="w-14 h-14 bg-yellow-100 rounded-lg flex items-center justify-center mb-6">
+                    <svg class="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 mb-3">XP & Gamification</h3>
+                <p class="text-gray-600 mb-4">
+                    Earn experience points, unlock achievements, and compete on leaderboards as you progress through your learning journey.
+                </p>
+                <a href="#" class="text-indigo-600 font-medium hover:text-indigo-800 transition flex items-center">
+                    Learn more
+                    <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+                    </svg>
+                </a>
+            </div>
+            
+            <!-- Feature 3 -->
+            <div class="bg-white rounded-xl p-6 shadow-md hover:shadow-xl transition-all">
+                <div class="w-14 h-14 bg-cyan-100 rounded-lg flex items-center justify-center mb-6">
+                    <svg class="w-8 h-8 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                    </svg>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 mb-3">Community Learning</h3>
+                <p class="text-gray-600 mb-4">
+                    Connect with peers, instructors, and mentors through discussion forums, group projects, and collaborative challenges.
+                </p>
+                <a href="#" class="text-indigo-600 font-medium hover:text-indigo-800 transition flex items-center">
+                    Learn more
+                    <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+                    </svg>
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="py-20 bg-gradient-to-r from-indigo-600 to-indigo-800 text-white">
+    <div class="container mx-auto px-4 text-center">
+        <h2 class="text-3xl md:text-4xl font-bold mb-6">Ready to Start Your Learning Journey?</h2>
+        <p class="text-xl text-indigo-100 mb-8 max-w-3xl mx-auto">
+            Join thousands of students already learning on EduVanta. Create your account today and get instant access to our library of courses.
+        </p>
+        <div class="flex flex-wrap justify-center gap-4">
+            <a href="/accounts/login/" class="px-8 py-3 bg-white text-indigo-600 rounded-xl font-bold shadow-lg hover:shadow-indigo-500/50 transition duration-300 transform hover:-translate-y-1">
+                Login Now
+            </a>
+            {% if not user.is_authenticated or user.role != 'admin' %}
+            <a href="/accounts/register/" class="px-8 py-3 bg-transparent border-2 border-white text-white rounded-xl font-bold hover:bg-white hover:text-indigo-600 transition duration-300">
+                Sign Up Now
+            </a>
+            {% endif %}
+            <a href="/courses/" class="px-8 py-3 bg-transparent border-2 border-white text-white rounded-xl font-bold hover:bg-white hover:text-indigo-600 transition duration-300">
+                Browse Courses
+            </a>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Simple animation for XP circles
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add slight delay to XP circles animation for better visual effect
+        const xpCircles = document.querySelectorAll('.xp-circle');
+        xpCircles.forEach((circle, index) => {
+            circle.style.animationDelay = `${index * 0.3}s`;
+        });
+        
+        // Add hover effect to course cards
+        const courseCards = document.querySelectorAll('.course-card');
+        courseCards.forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.classList.add('transform', 'scale-102');
+            });
+            card.addEventListener('mouseleave', function() {
+                this.classList.remove('transform', 'scale-102');
+            });
+        });
+    });
+</script>
+{% endblock %}
